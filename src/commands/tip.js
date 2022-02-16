@@ -84,7 +84,7 @@ module.exports = {
         if (tx !== null && tx !== undefined) {
             interaction.reply(
                 //`:moneybag: ${interaction.user} sent ${amount} KAS to ${who} in [${tx.txid}](${KATNIP_TX}${tx.txid})` +
-                `:moneybag: ${interaction.user} [sent]((${KATNIP_TX}${tx.txid})) ${amount} KAS to ${who}` +
+                `:moneybag: ${interaction.user} [sent](${KATNIP_TX}${tx.txid}) ${amount} KAS to ${who}` +
                 (message ? `\n> ${message}` : "")
             )
         }
