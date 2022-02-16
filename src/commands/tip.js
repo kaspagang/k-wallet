@@ -75,7 +75,7 @@ module.exports = {
             }
             return {address, amount: Math.floor(userAmount * KAS_TO_SOMPIS)}
         });
-        if (allowHold) {
+        if (allowHold && custodyUsers.length > 0) {
             targets.push({address: getCustodialAddress(), amount: custodyUsers.length*Math.floor(userAmount*KAS_TO_SOMPIS)})
         }
 
@@ -94,7 +94,7 @@ module.exports = {
         })
 
         if (tx !== null && tx !== undefined) {
-            if (allowHold) {
+            if (allowHold && custodyUsers.length > 0) {
                 await Promise.all(custodyUsers.map(async ({user}) => await addCustody(user, userAmount)));
             }
             interaction.reply(
