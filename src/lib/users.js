@@ -146,7 +146,7 @@ const updateUser = async (user, password, address, forward, unlockTimeout, hideA
             if (wallet === null) {
                 throw new Error('Wallet is locked - cannot change password')
             } else {
-                userInfo.mnemonic = wallet.export(password);
+                userInfo.mnemonic = await wallet.export(password);
             }
         }
         if (address !== null && address !== undefined) {
