@@ -95,7 +95,10 @@ module.exports = {
 
         if (tx !== null && tx !== undefined) {
             if (allowHold && custodyUsers.length > 0) {
-                await Promise.all(custodyUsers.map(async ({user}) => await addCustody(user, userAmount)));
+                await Promise.all(custodyUsers.map(async ({user}) => {
+                    console.log(`Adding ${userAmount} for ${user.id} in custody`)
+                    await addCustody(user.id, userAmount)
+                }));
             }
             interaction.reply(
                 //`:moneybag: ${interaction.user} sent ${amount} KAS to ${who} in [${tx.txid}](${KATNIP_TX}${tx.txid})` +
