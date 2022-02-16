@@ -28,7 +28,7 @@ module.exports = {
         }
 
         await wallet.submitTransaction({
-            targets: [{address: info.forwardAddress, amount: amount*KAS_TO_SOMPIS}],
+            targets: [{address: info.forwardAddress, amount: Math.floor(amount*KAS_TO_SOMPIS)}],
             changeAddrOverride: info.publicAddress,
             calculateNetworkFee: true
         }).catch((e) => {

@@ -68,20 +68,20 @@ module.exports = {
 
         const userAmount = amount/totalUsers;
 
-        const inputs = nonCustodyUsers.map(({user, userInfo}) => {
+        const targets = nonCustodyUsers.map(({user, userInfo}) => {
             let address = userInfo.publicAddress
             if (userInfo.forward && userInfo.forwardAddress !== "") {
                 address = userInfo.forwardAddress;
             }
-            return {address, amount: userAmount * KAS_TO_SOMPIS}
+            return {address, amount: Math.floor(userAmount * KAS_TO_SOMPIS)}
         });
         if (allowHold) {
-            inputs.push({address: getCustodialAddress(), amount: userAmount*custodyUsers.length*KAS_TO_SOMPIS})
+            targets.push({address: getCustodialAddress(), amount: custodyUsers.length*Math.floor(userAmount*KAS_TO_SOMPIS)})
         }
 
-        console.log(inputs);
+        console.log(targets);
         let tx = await wallet.submitTransaction({
-            targets: inputs,
+            targets,
             changeAddrOverride: changeAddress,
             calculateNetworkFee: true
         }).catch((e) => {

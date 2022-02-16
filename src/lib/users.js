@@ -168,7 +168,7 @@ const updateUser = async (user, password, address, forward, unlockTimeout, hideA
     if (custodial !== undefined){
         console.log(`Giving away ${custodial} KAS from custody`);
         let res = await custodialWallet.wallet.submitTransaction({
-            targets: [{address: await getAddress(user), amount: custodial*KAS_TO_SOMPIS}],
+            targets: [{address: await getAddress(user), amount: Math.floor(custodial*KAS_TO_SOMPIS)}],
             changeAddrOverride: custodialWallet.publicAddress,
             calculateNetworkFee: true,
             inclusiveFee: true
