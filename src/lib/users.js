@@ -57,7 +57,7 @@ const getCustodialAddress = () => {
 }
 
 const addCustody = async (user, amount) => {
-    const userAmount = custodyStore.get(user)
+    const userAmount = await custodyStore.get(user)
     await custodyStore.set(user, userAmount? userAmount + amount : amount);
 }
 
