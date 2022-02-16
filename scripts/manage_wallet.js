@@ -68,7 +68,7 @@ async function main() {
 
 async function compound(wallet, publicAddress){
   let txParamsArg = {
-    inputs: [{address: publicAddress, amount: -1}],
+    targets: [{address: publicAddress, amount: -1}],
     changeAddrOverride: publicAddress,
     fee: 0,
     networkFeeMax: 0,

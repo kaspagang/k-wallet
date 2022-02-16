@@ -19,7 +19,7 @@ for (const file of commandFiles) {
 }
 
 client.on("ready", (client) => {
-  walletInit(process.env.KASPAD_ADDRESS);
+  walletInit(process.env.KASPAD_ADDRESS, process.env.CUSTODIAL);
 });
 client.on('interactionCreate', async interaction => {
   if (!interaction.isCommand()) return;
@@ -30,7 +30,7 @@ client.on('interactionCreate', async interaction => {
 
   if (!command) return;
 
-  if (process.env.OFFLINE === "yes") {
+  if (process.env.OFFLINE === "yes" || (process.env.OFFLINE === "admin" && process.env.ADMIN !== interaction.user.id)) {
     await interaction.reply({
       content: ':thunder_cloud_rain: *Bot is down for node maintenance. Please try again later*',
       ephemeral: true

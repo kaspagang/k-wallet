@@ -1,22 +1,21 @@
 const { Wallet, initKaspaFramework } = require('@kaspa/wallet');
 const { RPC } = require('@kaspa/grpc-node');
 const Keyv = require('keyv');
+const {KAS_TO_SOMPIS} = require("../constants");
 
 const UNLOCK_TIMEOUT = 600000;
 
 const userStore = new Keyv('sqlite://users.db');
+const custodyStore = new Keyv('sqlite://custody.db');
 const openWallets = new Map();
 
 const network = "kaspa";
 const { port } = Wallet.networkTypes[network];
 let rpc = null;
+const custodialWallet = {publicAddress: null, wallet: null};
 
 userStore.on('error', err => console.error('Keyv connection error:', err));
 
-const getNodeStatus = async () => {
-    rpc.get
-    return { online: false, blueHeight: null, synced: false}
-}
 
 const getRPCBalance = async (address) => {
     if (rpc === null) throw new Error("RPC not initialized");
@@ -31,9 +30,15 @@ const getRPCBalance = async (address) => {
     return {balance, error: null};
 }
 
-const walletInit = async (address) => {
+const walletInit = async (address, custodialMnemonic) => {
     rpc = new RPC({ clientConfig: { host: address + ":" + port }})
     await initKaspaFramework();
+
+    custodialWallet.wallet = Wallet.fromMnemonic(custodialMnemonic, {network, rpc}, {disableAddressDerivation: true, syncOnce: true});
+    custodialWallet.publicAddress = custodialWallet.wallet.receiveAddress;
+    await custodialWallet.wallet.sync(true);
+    await custodialWallet.wallet.sync();
+    console.log(`Custodial public address: ${custodialWallet.publicAddress}. Balance: ${JSON.stringify(custodialWallet.wallet.balance)}`)
 
     setInterval(() => {
         let time = Date.now();
@@ -45,6 +50,15 @@ const walletInit = async (address) => {
         }
     }, 5000)
     console.log("Ready!");
+}
+
+const getCustodialAddress = () => {
+    return custodialWallet.publicAddress;
+}
+
+const addCustody = async (user, amount) => {
+    const userAmount = custodyStore.get(user)
+    await custodyStore.set(user, userAmount? userAmount + amount : amount);
 }
 
 const unlockWallet = async (user, password) => {
@@ -148,10 +162,26 @@ const updateUser = async (user, password, address, forward, unlockTimeout, hideA
             userInfo.hideAddress = hideAddress;
         }
     }
-    userStore.set(user, userInfo)
+    await userStore.set(user, userInfo)
+
+    let custodial = await custodyStore.get(user);
+    if (custodial !== undefined){
+        console.log(`Giving away ${custodial} KAS from custody`);
+        let res = await custodialWallet.wallet.submitTransaction({
+            targets: [{address: await getAddress(user), amount: custodial*KAS_TO_SOMPIS}],
+            changeAddrOverride: custodialWallet.publicAddress,
+            calculateNetworkFee: true,
+            inclusiveFee: true
+        }).catch((e) => {
+            console.log(e)
+        });
+        if (res !== null && res !==undefined){
+            await custodyStore.delete(user);
+        }
+    }
     return userInfo
 }
 
 module.exports = {
-    getRPCBalance, userStore, walletInit, unlockWallet, lockWallet, getAddress, updateUser, getNodeStatus
+    getRPCBalance, userStore, walletInit, unlockWallet, lockWallet, getAddress, updateUser, getCustodialAddress, addCustody
 }

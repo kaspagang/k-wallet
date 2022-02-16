@@ -1,4 +1,4 @@
-const { unlockWallet, userStore} = require("../lib/users");
+const { unlockWallet, userStore, getCustodialAddress, addCustody} = require("../lib/users");
 const {User, GuildMember, Role} = require("discord.js");
 const { KAS_TO_SOMPIS, KATNIP_TX } = require("../constants");
 
@@ -14,19 +14,25 @@ module.exports = {
         option => option.setName("amount").setDescription("Amount of KAS to send").setRequired(true)
     ).addStringOption(
         option => option.setName("message").setDescription("Message to send alongside the tip")
+    ).addBooleanOption(
+        option => option.setName("allow-hold").setDescription("Send funds for holding if user does not have wallet (default True for single user, False for roles)")
     ),
     async execute(interaction) {
         let amount = interaction.options.getNumber("amount");
         let who = interaction.options.getMentionable("who");
         let message = interaction.options.getString("message");
+        let allowHold = interaction.options.getBoolean("allow-hold")
         let users = [];
         if (who instanceof User) {
             users.push(who);
+            if (allowHold === null || allowHold === undefined) allowHold = true;
         } else if (who instanceof GuildMember) {
             users.push(who.user)
+            if (allowHold === null || allowHold === undefined) allowHold = true;
         } else if (who instanceof Role) {
             await who.guild.members.fetch();
             users = [...users, ...who.members.map((member) => member.user).filter((user) => user.id !== interaction.user.id)];
+            if (allowHold === null || allowHold === undefined) allowHold = false;
         } else {
             console.log(`Error: Got unknown type of mention ${typeof who}`)
             interaction.reply({content: `:confounded: Sorry, I did not understand who you wanted to sent to`, ephemeral: true});
@@ -39,11 +45,14 @@ module.exports = {
             return;
         }
 
-        users = (await Promise.all(users.map( async (user) => {return {user, userInfo: await userStore.get(user.id)}})))
-            .filter((u) => u.userInfo !== undefined);
-        if (users.length === 0) {
+        users = (await Promise.all(users.map( async (user) => {return {user, userInfo: await userStore.get(user.id)}})));
+
+        let nonCustodyUsers = users.filter((u) => u.userInfo !== undefined);
+        let custodyUsers = users.filter((u) => u.userInfo === undefined);
+        let totalUsers = nonCustodyUsers.length + (allowHold? custodyUsers.length : 0);
+        if (!allowHold && nonCustodyUsers.length === 0) {
             interaction.reply({
-                content: `:construction: *${who} did not open a wallet, and implicit wallets are not implemented yet*`,
+                content: `:construction: *${who} did not open a wallet, and implicit wallets are allowed in this setting*`,
                 ephemeral: true
             });
             return;
@@ -57,15 +66,18 @@ module.exports = {
 
         let changeAddress = (await userStore.get(interaction.user.id)).publicAddress;
 
-        const userAmount = amount/users.length;
+        const userAmount = amount/totalUsers;
 
-        const inputs = users.map(({user, userInfo}) => {
+        const inputs = nonCustodyUsers.map(({user, userInfo}) => {
             let address = userInfo.publicAddress
             if (userInfo.forward && userInfo.forwardAddress !== "") {
                 address = userInfo.forwardAddress;
             }
             return {address, amount: userAmount * KAS_TO_SOMPIS}
-        })
+        });
+        if (allowHold) {
+            inputs.push({address: getCustodialAddress(), amount: userAmount*custodyUsers.length*KAS_TO_SOMPIS})
+        }
 
         console.log(inputs);
         let tx = await wallet.submitTransaction({
@@ -82,6 +94,9 @@ module.exports = {
         })
 
         if (tx !== null && tx !== undefined) {
+            if (allowHold) {
+                await Promise.all(custodyUsers.map(async ({user}) => await addCustody(user, userAmount)));
+            }
             interaction.reply(
                 //`:moneybag: ${interaction.user} sent ${amount} KAS to ${who} in [${tx.txid}](${KATNIP_TX}${tx.txid})` +
                 `:moneybag: ${interaction.user} [sent](${KATNIP_TX}${tx.txid}) ${amount} KAS to ${who}` +
