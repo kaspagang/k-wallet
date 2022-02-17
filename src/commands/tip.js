@@ -1,25 +1,51 @@
+const { MessageMentions: { USERS_PATTERN, ROLES_PATTERN, EVERYONE_PATTERN } } = require('discord.js');
 const { unlockWallet, userStore, getCustodialAddress, addCustody} = require("../lib/users");
-const {User, GuildMember, Role} = require("discord.js");
+const {User, GuildMember, Role, Message} = require("discord.js");
 const { KAS_TO_SOMPIS, KATNIP_TX } = require("../constants");
 
-const SAFETY_MARGIN = 1.01
-let COUNT = 0;
+async function parseMentions(interaction, mention) {
+    let match;
+    let mentions = [];
+    let tags = []
 
-const parseUsers = async (who) => {
+    await interaction.guild.members.fetch();
+    while ((match = USERS_PATTERN.exec(mention)) !== null){
+        tags.push(match[0]);
+        mentions.push(interaction.guild.members.cache.get(match[1]))
+    }
+
+    await interaction.guild.roles.fetch();
+    while ((match = ROLES_PATTERN.exec(mention)) !== null){
+        tags.push(match[0]);
+        mentions.push(interaction.guild.roles.cache.get(match[1]));
+    }
+
+    while ((match = EVERYONE_PATTERN.exec(mention)) !== null){
+        tags.push(match[0]);
+        mentions.push(interaction.guild.roles.cache.get(interaction.guild.id));
+    }
+
+    return {mentions, tags: tags.reduce((a,b) => a+ ","+b)};
+}
+
+
+const parseMentionable = async (interaction, who, allowHold) => {
     if (who === null || who === undefined) {
         return [];
     }
     let users = [];
+
     if (who instanceof User) {
-        users.push(who);
-        if (allowHold === null || allowHold === undefined) allowHold = true;
+        users.push({user: who, allowHold: (allowHold === null || allowHold === undefined)? true : allowHold});
     } else if (who instanceof GuildMember) {
-        users.push(who.user)
-        if (allowHold === null || allowHold === undefined) allowHold = true;
+        users.push({user: who.user, allowHold: (allowHold === null || allowHold === undefined)? true : allowHold})
     } else if (who instanceof Role) {
-        await who.guild.members.fetch();
-        users = [...users, ...who.members.map((member) => member.user).filter((user) => user.id !== interaction.user.id)];
-        if (allowHold === null || allowHold === undefined) allowHold = false;
+        users = [...users, ...who.members.map((member) => {
+            return {
+                user: member.user,
+                allowHold: (allowHold === null || allowHold === undefined)? false : allowHold
+            };
+        }).filter(({user}) => user.id !== interaction.user.id)];
     }
     return users;
 }
@@ -27,14 +53,8 @@ const parseUsers = async (who) => {
 module.exports = {
     name: "tip",
     short: true,
-    builder: (namedCommand) => namedCommand.setDescription('Sends some KAS').addMentionableOption(
+    builder: (namedCommand) => namedCommand.setDescription('Sends some KAS').addStringOption(
         option => option.setName("who").setDescription("Who to send the tokens (user, channel, ...). Splits the tokens equally").setRequired(true)
-    ).addMentionableOption(
-        option => option.setName("additional-who2").setDescription("Who to send the tokens (user, channel, ...). Splits the tokens equally").setRequired(true)
-    ).addMentionableOption(
-        option => option.setName("additional-who3").setDescription("Who to send the tokens (user, channel, ...). Splits the tokens equally").setRequired(true)
-    ).addMentionableOption(
-        option => option.setName("additional-who4").setDescription("Who to send the tokens (user, channel, ...). Splits the tokens equally").setRequired(true)
     ).addNumberOption(
         option => option.setName("amount").setDescription("Amount of KAS to send").setRequired(true)
     ).addStringOption(
@@ -44,41 +64,27 @@ module.exports = {
     ),
     async execute(interaction) {
         let amount = interaction.options.getNumber("amount");
-        let who = interaction.options.getMentionable("who");
-        let who2 = interaction.options.getMentionable("additional-who2");
-        let who3 = interaction.options.getMentionable("additional-who3");
-        let who4 = interaction.options.getMentionable("additional-who4");
         let message = interaction.options.getString("message");
         let allowHold = interaction.options.getBoolean("allow-hold")
+        let who = await parseMentions(interaction, interaction.options.getString("who"));
 
-        let users = [
-            ...(await parseUsers(who)),
-            ...(await parseUsers(who2)),
-            ...(await parseUsers(who3)),
-            ...(await parseUsers(who4)),
-        ];
-        let targstString = `${who}` + [who2, who3, who4].map((who) => {
-            if (who !== null && who !== undefined) {
-                return `,${who2}`;
-            }
-            return "";
-        }).reduce((a,b) => a+b)
+        let users = (await Promise.all(who.mentions.map(async (member) => (await parseMentionable(interaction, member, allowHold))))).flat();
+        console.log(users)
 
-
-        users = users.filter((who) => !who.bot);
+        users = users.filter(({user}) => !user.bot);
         if (users.length === 0) {
             interaction.reply({content: ":warning: *Sending KAS to bots is not allowed*", ephemeral: true});
             return;
         }
 
-        users = (await Promise.all(users.map( async (user) => {return {user, userInfo: await userStore.get(user.id)}})));
+        users = (await Promise.all(users.map( async (user) => {return {...user, userInfo: await userStore.get(user.user.id)}})));
 
         let nonCustodyUsers = users.filter((u) => u.userInfo !== undefined);
-        let custodyUsers = users.filter((u) => u.userInfo === undefined);
-        let totalUsers = nonCustodyUsers.length + (allowHold? custodyUsers.length : 0);
-        if (!allowHold && nonCustodyUsers.length === 0) {
+        let custodyUsers = users.filter((u) => u.allowHold && u.userInfo === undefined);
+        let totalUsers = nonCustodyUsers.length + custodyUsers.length;
+        if (totalUsers === 0) {
             interaction.reply({
-                content: `:construction: *${targstString} did not open a wallet, and implicit wallets are allowed in this setting*`,
+                content: `:construction: *${who.tags} did not open a wallet, and implicit wallets are allowed in this setting*`,
                 ephemeral: true
             });
             return;
@@ -94,14 +100,14 @@ module.exports = {
 
         const userAmount = amount/totalUsers;
 
-        const targets = nonCustodyUsers.map(({user, userInfo}) => {
+        const targets = nonCustodyUsers.map(({userInfo}) => {
             let address = userInfo.publicAddress
             if (userInfo.forward && userInfo.forwardAddress !== "") {
                 address = userInfo.forwardAddress;
             }
             return {address, amount: Math.floor(userAmount * KAS_TO_SOMPIS)}
         });
-        if (allowHold && custodyUsers.length > 0) {
+        if (custodyUsers.length > 0) {
             targets.push({address: getCustodialAddress(), amount: custodyUsers.length*Math.floor(userAmount*KAS_TO_SOMPIS)})
         }
 
@@ -120,14 +126,14 @@ module.exports = {
         })
 
         if (tx !== null && tx !== undefined) {
-            if (allowHold && custodyUsers.length > 0) {
+            if (custodyUsers.length > 0) {
                 await Promise.all(custodyUsers.map(async ({user}) => {
                     console.log(`Adding ${userAmount} for ${user.id} in custody`)
                     await addCustody(user.id, userAmount)
                 }));
             }
             interaction.reply(
-                `:moneybag: ${interaction.user} [sent](${KATNIP_TX}${tx.txid}) ${amount} KAS to ${targstString}` +
+                `:moneybag: ${interaction.user} [sent](${KATNIP_TX}${tx.txid}) ${amount} KAS to ${who.tags}` +
                 (message ? `\n> ${message}` : "")
             )
         }
