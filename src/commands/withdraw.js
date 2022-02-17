@@ -10,7 +10,7 @@ module.exports = {
     builder: (namedCommand) => namedCommand.setDescription('Move KAS to the forward address').addNumberOption(
         option => option.setName("amount").setDescription("Amount of KAS to send").setRequired(true)
     ).addStringOption(
-        option => option.setName("address").setDescription("Destination address for the withdrawel (default: forward-address specified in `/kwallet settings forward-address`)").setRequired(false)
+        option => option.setName("address").setDescription("Destination address for the withdrawel (default: forward-address specified in `settings`)").setRequired(false)
     ),
     
     async execute(interaction) {
