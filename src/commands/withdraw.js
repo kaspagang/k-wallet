@@ -5,20 +5,29 @@ const KAS_TO_SOMPIS = 100000000;
 const KATNIP_TX = "http://katnip.kaspanet.org/tx/";
 
 module.exports = {
-    name: "forward",
+    name: "withdraw",
     short: false,
     builder: (namedCommand) => namedCommand.setDescription('Move KAS to the forward address').addNumberOption(
         option => option.setName("amount").setDescription("Amount of KAS to send").setRequired(true)
+    ).addStringOption(
+        option => option.setName("address").setDescription("Destination address for the withdrawel (default: forward-address specified in `/kwallet settings forward-address`)").setRequired(false)
     ),
+    
     async execute(interaction) {
         let amount = interaction.options.getNumber("amount");
+        let address = interaction.options.getString("address");
         let info = await userStore.get(interaction.user.id);
+        
         if (info === undefined) {
             await interaction.reply({content: ":construction: *You do not have a wallet. Call `/kwallet unlock` to create one*", ephemeral: true});
             return;
-        } else if (!info.forwardAddress) {
-            await interaction.reply({content: ":warning: *You did not set up forward address. Call `/kwallet settings` and set the forward address*", ephemeral: true});
-            return;
+        } else if (address === null || address === undefined) {
+            if (!info.forwardAddress) {
+                await interaction.reply({content: ":warning: *You did not specify a withdrawel address, or set up a forward address. Please specify a address, or Call `/kwallet settings` and set the forward address*", ephemeral: true});
+                return;
+            } else {
+                address = info.forwardAddress;
+            }
         }
 
         let wallet = await unlockWallet(interaction.user.id);
@@ -28,7 +37,7 @@ module.exports = {
         }
 
         await wallet.submitTransaction({
-            targets: [{address: info.forwardAddress, amount: Math.floor(amount*KAS_TO_SOMPIS)}],
+            targets: [{address: address, amount: Math.floor(amount*KAS_TO_SOMPIS)}],
             changeAddrOverride: info.publicAddress,
             calculateNetworkFee: true
         }).catch((e) => {
@@ -37,7 +46,7 @@ module.exports = {
             interaction.reply({content: `:warning:*Failed submitting transaction:*\n> ${message}`, ephemeral: true})
         }).then((tx) => {
             if (tx !== null && tx !== undefined) {
-                interaction.reply(`:moneybag: ${interaction.user} sent ${amount} KAS to ${who} in [${tx.txid}](${KATNIP_TX}${tx.txid})`)
+                interaction.reply({content: `:moneybag: ${interaction.user} withdrew ${amount} KAS to ${address} in [${tx.txid}](${KATNIP_TX}${tx.txid})`, ephemeral: true})
             }
         });
     },
