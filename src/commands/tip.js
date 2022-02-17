@@ -3,7 +3,7 @@ const { unlockWallet, userStore, getCustodialAddress, addCustody} = require("../
 const {User, GuildMember, Role, Message} = require("discord.js");
 const { KAS_TO_SOMPIS, KATNIP_TX } = require("../constants");
 
-async function parseMentions(interaction, mention) {
+async function getMentions(interaction, mention) {
     let match;
     let mentions = [];
     let tags = []
@@ -33,33 +33,21 @@ const parseMentionable = async (interaction, who, allowHold) => {
     if (who === null || who === undefined) {
         return [];
     }
-    let users = new Map();
+    let users = [];
 
     if (who instanceof User) {
-        let userAllowHold = (allowHold === null || allowHold === undefined)? true : allowHold;
-        if (users.has(who.id)) {
-            userAllowHold = userAllowHold || users.get(who.id).allowHold;
-        }
-        users.set(who.id, {user: who, allowHold: userAllowHold});
+        users.push({user: who, allowHold: (allowHold === null || allowHold === undefined)? true : allowHold});
     } else if (who instanceof GuildMember) {
-        let userAllowHold = (allowHold === null || allowHold === undefined)? true : allowHold;
-        if (users.has(who.id)) {
-            userAllowHold = userAllowHold || users.get(who.id).allowHold;
-        }
-        users.set(who.id, {user: who.user, allowHold: userAllowHold})
+        users.push({user: who.user, allowHold: (allowHold === null || allowHold === undefined)? true : allowHold})
     } else if (who instanceof Role) {
-        for (let member of who.members) {
-            if (member.user.id !== interaction.user.id) {
-                let userAllowHold = (allowHold === null || allowHold === undefined) ? false : allowHold;
-                if (users.has(member.id)) {
-                    userAllowHold = userAllowHold || users.get(member.id).allowHold;
-                }
-                users.set(member.user.id, {user: member.user, allowHold: userAllowHold});
-            }
-        }
+        users = [...users, ...who.members.map((member) => {
+            return {
+                user: member.user,
+                allowHold: (allowHold === null || allowHold === undefined)? false : allowHold
+            };
+        }).filter(({user}) => user.id !== interaction.user.id)];
     }
-
-    return [...users.values()];
+    return users;
 }
 
 module.exports = {
@@ -78,9 +66,19 @@ module.exports = {
         let amount = interaction.options.getNumber("amount");
         let message = interaction.options.getString("message");
         let allowHold = interaction.options.getBoolean("allow-hold")
-        let who = await parseMentions(interaction, interaction.options.getString("who"));
+        let who = await getMentions(interaction, interaction.options.getString("who"));
 
-        let users = (await Promise.all(who.mentions.map(async (member) => (await parseMentionable(interaction, member, allowHold))))).flat();
+        let users = new Map();
+        for (let member in who.mentions) {
+            for (let user of parseMentionable(member, interaction, member, allowHold)){
+                let userAllowHold = user.allowHold
+                if (users.has(who.id)) {
+                    userAllowHold = userAllowHold || users.get(who.id).allowHold;
+                }
+                users.set(user.user.id, {...user, userAllowHold})
+            }
+        }
+        users = [...users.values()];
         console.log(users)
 
         users = users.filter(({user}) => !user.bot);
