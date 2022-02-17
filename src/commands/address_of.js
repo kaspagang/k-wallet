@@ -10,7 +10,7 @@ module.exports = {
         const user = interaction.options.getUser("user");
         const address = await getAddress(user.id);
         if (address === null){
-            await interaction.reply({content:`:mag_right: *${user} does not have a wallet, or request to hide their address*`, ephemeral: true});
+            await interaction.reply({content:`:mag_right: *${user} does not have a wallet*`, ephemeral: true});
             return;
         }
         await interaction.reply({content:`:bank: The direct address of ${user} is \`${address}\``, ephemeral: true});

@@ -5,11 +5,36 @@ const { KAS_TO_SOMPIS, KATNIP_TX } = require("../constants");
 const SAFETY_MARGIN = 1.01
 let COUNT = 0;
 
+const parseUsers = async (who) => {
+    if (who === null || who === undefined) {
+        return [];
+    }
+    let users = [];
+    if (who instanceof User) {
+        users.push(who);
+        if (allowHold === null || allowHold === undefined) allowHold = true;
+    } else if (who instanceof GuildMember) {
+        users.push(who.user)
+        if (allowHold === null || allowHold === undefined) allowHold = true;
+    } else if (who instanceof Role) {
+        await who.guild.members.fetch();
+        users = [...users, ...who.members.map((member) => member.user).filter((user) => user.id !== interaction.user.id)];
+        if (allowHold === null || allowHold === undefined) allowHold = false;
+    }
+    return users;
+}
+
 module.exports = {
     name: "tip",
     short: true,
     builder: (namedCommand) => namedCommand.setDescription('Sends some KAS').addMentionableOption(
         option => option.setName("who").setDescription("Who to send the tokens (user, channel, ...). Splits the tokens equally").setRequired(true)
+    ).addMentionableOption(
+        option => option.setName("additional-who2").setDescription("Who to send the tokens (user, channel, ...). Splits the tokens equally").setRequired(true)
+    ).addMentionableOption(
+        option => option.setName("additional-who3").setDescription("Who to send the tokens (user, channel, ...). Splits the tokens equally").setRequired(true)
+    ).addMentionableOption(
+        option => option.setName("additional-who4").setDescription("Who to send the tokens (user, channel, ...). Splits the tokens equally").setRequired(true)
     ).addNumberOption(
         option => option.setName("amount").setDescription("Amount of KAS to send").setRequired(true)
     ).addStringOption(
@@ -20,24 +45,25 @@ module.exports = {
     async execute(interaction) {
         let amount = interaction.options.getNumber("amount");
         let who = interaction.options.getMentionable("who");
+        let who2 = interaction.options.getMentionable("additional-who2");
+        let who3 = interaction.options.getMentionable("additional-who3");
+        let who4 = interaction.options.getMentionable("additional-who4");
         let message = interaction.options.getString("message");
         let allowHold = interaction.options.getBoolean("allow-hold")
-        let users = [];
-        if (who instanceof User) {
-            users.push(who);
-            if (allowHold === null || allowHold === undefined) allowHold = true;
-        } else if (who instanceof GuildMember) {
-            users.push(who.user)
-            if (allowHold === null || allowHold === undefined) allowHold = true;
-        } else if (who instanceof Role) {
-            await who.guild.members.fetch();
-            users = [...users, ...who.members.map((member) => member.user).filter((user) => user.id !== interaction.user.id)];
-            if (allowHold === null || allowHold === undefined) allowHold = false;
-        } else {
-            console.log(`Error: Got unknown type of mention ${typeof who}`)
-            interaction.reply({content: `:confounded: Sorry, I did not understand who you wanted to sent to`, ephemeral: true});
-            return;
-        }
+
+        let users = [
+            ...(await parseUsers(who)),
+            ...(await parseUsers(who2)),
+            ...(await parseUsers(who3)),
+            ...(await parseUsers(who4)),
+        ];
+        let targstString = `${who}` + [who2, who3, who4].map((who) => {
+            if (who !== null && who !== undefined) {
+                return `,${who2}`;
+            }
+            return "";
+        }).reduce((a,b) => a+b)
+
 
         users = users.filter((who) => !who.bot);
         if (users.length === 0) {
@@ -52,7 +78,7 @@ module.exports = {
         let totalUsers = nonCustodyUsers.length + (allowHold? custodyUsers.length : 0);
         if (!allowHold && nonCustodyUsers.length === 0) {
             interaction.reply({
-                content: `:construction: *${who} did not open a wallet, and implicit wallets are allowed in this setting*`,
+                content: `:construction: *${targstString} did not open a wallet, and implicit wallets are allowed in this setting*`,
                 ephemeral: true
             });
             return;
@@ -101,8 +127,7 @@ module.exports = {
                 }));
             }
             interaction.reply(
-                //`:moneybag: ${interaction.user} sent ${amount} KAS to ${who} in [${tx.txid}](${KATNIP_TX}${tx.txid})` +
-                `:moneybag: ${interaction.user} [sent](${KATNIP_TX}${tx.txid}) ${amount} KAS to ${who}` +
+                `:moneybag: ${interaction.user} [sent](${KATNIP_TX}${tx.txid}) ${amount} KAS to ${targstString}` +
                 (message ? `\n> ${message}` : "")
             )
         }
