@@ -29,7 +29,7 @@ async function getMentions(interaction, mention) {
 }
 
 
-const parseMentionable = async (interaction, who, allowHold) => {
+const parseMentionable = (interaction, who, allowHold) => {
     if (who === null || who === undefined) {
         return [];
     }
@@ -69,8 +69,8 @@ module.exports = {
         let who = await getMentions(interaction, interaction.options.getString("who"));
 
         let users = new Map();
-        for (let member in who.mentions) {
-            for (let user of parseMentionable(member, interaction, member, allowHold)){
+        for (let member of who.mentions) {
+            for (let user of parseMentionable(interaction, member, allowHold)){
                 let userAllowHold = user.allowHold
                 if (users.has(who.id)) {
                     userAllowHold = userAllowHold || users.get(who.id).allowHold;
