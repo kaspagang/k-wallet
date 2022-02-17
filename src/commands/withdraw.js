@@ -3,6 +3,7 @@ const {User, GuildMember, Role} = require("discord.js");
 
 const KAS_TO_SOMPIS = 100000000;
 const KATNIP_TX = "http://katnip.kaspanet.org/tx/";
+const KATNIP_ADDR = "http://katnip.kaspanet.org/addr/";
 
 module.exports = {
     name: "withdraw",
@@ -46,7 +47,7 @@ module.exports = {
             interaction.reply({content: `:warning:*Failed submitting transaction:*\n> ${message}`, ephemeral: true})
         }).then((tx) => {
             if (tx !== null && tx !== undefined) {
-                interaction.reply({content: `:moneybag: ${interaction.user} withdrew ${amount} KAS to ${address} in [${tx.txid}](${KATNIP_TX}${tx.txid})`, ephemeral: true})
+                interaction.reply({content: `:moneybag: ${interaction.user} withdrew ${amount} KAS to [${address}](${KATNIP_ADDR}${address}) in [${tx.txid}](${KATNIP_TX}${tx.txid})`, ephemeral: true})
             }
         });
     },
