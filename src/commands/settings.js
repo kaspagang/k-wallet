@@ -18,7 +18,7 @@ module.exports = {
     async execute(interaction) {
         let secret = interaction.options.getString("secret");
         let address = interaction.options.getString("forward-address");
-        let forward = interaction.options.getString("auto-forward");
+        let forward = interaction.options.getBoolean("auto-forward");
         let unlockTimeout = interaction.options.getInteger("unlock-timeout");
         let hideAddress = interaction.options.getBoolean("hide-address");
         let result = await updateUser(interaction.user.id, secret, address, forward, unlockTimeout, hideAddress).catch(async (e) => {
