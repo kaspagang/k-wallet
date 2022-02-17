@@ -2,7 +2,9 @@ const { Wallet, initKaspaFramework } = require('@kaspa/wallet');
 const { RPC } = require('@kaspa/grpc-node');
 const Keyv = require('keyv');
 const {KAS_TO_SOMPIS} = require("../constants");
-const {Address} = require("@kaspa/core-lib");
+
+const walletModule = require.cache[require.resolve('@kaspa/wallet')];
+const {Address} = walletModule.require('@kaspa/core-lib')
 
 const UNLOCK_TIMEOUT = 600000;
 

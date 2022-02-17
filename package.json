@@ -21,7 +21,6 @@
   "dependencies": {
     "@discordjs/builders": "^0.12.0",
     "@discordjs/rest": "^0.3.0",
-    "@kaspa/core-lib": "^1.6.2",
     "@kaspa/grpc-node": "^1.0.7",
     "@kaspa/wallet": "file:../kaspa-wallet",
     "@keyv/sqlite": "^3.0.0",
