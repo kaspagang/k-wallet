@@ -128,7 +128,7 @@ const lockWallet = (user) => {
 
 const getAddress = async (user) => {
     let userInfo = await userStore.get(user);
-    if (userInfo === undefined || userInfo.hideAddress === true){
+    if (userInfo === undefined){
         return null;
     } else if (userInfo.forward && userInfo.forwardAddress !== "") {
         return userInfo.forwardAddress

@@ -25,7 +25,7 @@ async function parseMentions(interaction, mention) {
         mentions.push(interaction.guild.roles.cache.get(interaction.guild.id));
     }
 
-    return {mentions, tags: tags.reduce((a,b) => a+ ","+b)};
+    return {mentions, tags: tags.reduce((a,b) => a+ " "+b)};
 }
 
 
@@ -33,21 +33,33 @@ const parseMentionable = async (interaction, who, allowHold) => {
     if (who === null || who === undefined) {
         return [];
     }
-    let users = [];
+    let users = new Map();
 
     if (who instanceof User) {
-        users.push({user: who, allowHold: (allowHold === null || allowHold === undefined)? true : allowHold});
+        let userAllowHold = (allowHold === null || allowHold === undefined)? true : allowHold;
+        if (users.has(who.id)) {
+            userAllowHold = userAllowHold || users.get(who.id).allowHold;
+        }
+        users.set(who.id, {user: who, allowHold: userAllowHold});
     } else if (who instanceof GuildMember) {
-        users.push({user: who.user, allowHold: (allowHold === null || allowHold === undefined)? true : allowHold})
+        let userAllowHold = (allowHold === null || allowHold === undefined)? true : allowHold;
+        if (users.has(who.id)) {
+            userAllowHold = userAllowHold || users.get(who.id).allowHold;
+        }
+        users.set(who.id, {user: who.user, allowHold: userAllowHold})
     } else if (who instanceof Role) {
-        users = [...users, ...who.members.map((member) => {
-            return {
-                user: member.user,
-                allowHold: (allowHold === null || allowHold === undefined)? false : allowHold
-            };
-        }).filter(({user}) => user.id !== interaction.user.id)];
+        for (let member of who.members) {
+            if (member.user.id !== interaction.user.id) {
+                let userAllowHold = (allowHold === null || allowHold === undefined) ? false : allowHold;
+                if (users.has(member.id)) {
+                    userAllowHold = userAllowHold || users.get(member.id).allowHold;
+                }
+                users.set(member.user.id, {user: member.user, allowHold: userAllowHold});
+            }
+        }
     }
-    return users;
+
+    return [...users.values()];
 }
 
 module.exports = {
