@@ -82,7 +82,7 @@ module.exports = {
             balance = (await getRPCBalance(info.publicAddress)).balance / KAS_TO_SOMPIS;
         }
         let currentInput = []
-        if (isNaN(amount)) {
+        if (!isNaN(amount)) {
             currentInput.push({"name": `${amount}`, "value": amount});
         }
         interaction.respond([
