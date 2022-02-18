@@ -36,3 +36,10 @@ rest.put(
 ).then(
     () => console.log('Successfully registered application commands.')
 ).catch(console.error);
+
+rest.put(
+    Routes.applicationCommands(process.env.DISCORD_CLIENT_ID), // for production
+    { body: [mainCommand.toJSON(), ...commands] }
+).then(
+    () => console.log('Successfully registered application commands.')
+).catch(console.error);

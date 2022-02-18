@@ -79,8 +79,7 @@ module.exports = {
         } else {
             balance = (await getRPCBalance(info.publicAddress)).balance / KAS_TO_SOMPIS;
         }
-        console.log(balance) //for debugging
-        interaction.respond([{"name": "Max", "value": Number(balance)}]);
+        interaction.respond([{"name": `${balance}`, "value": balance}]);
     },
     async execute(interaction) {
         let amount = interaction.options.getNumber("amount");
