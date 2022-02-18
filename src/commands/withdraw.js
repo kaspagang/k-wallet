@@ -16,7 +16,8 @@ module.exports = {
     
     async autocomplete(interaction) {
         // In autocomplete, we get string
-        console.log(interaction.options.data.options)
+        console.log(interaction.options)
+        console.log(interaction.commandName)
         if (interaction.options.data.name === "amount") { 
             let amount = parseFloat(interaction.options.getNumber("amount"));
 
