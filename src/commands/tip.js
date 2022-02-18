@@ -186,7 +186,7 @@ module.exports = {
             }
             let txLinks = tx.txids.map((txid, i) => (
                 (i === (tx.txids.length - 1) && i > 0)? "and " : "") +
-                `[here](${KATNIP_TX}${tx.txid})`
+                `[here](${KATNIP_TX}${txid})`
             ).reduce((a,b) => a + ", " + b)
             interaction.reply(
                 `:moneybag: ${interaction.user} sent ${amount} KAS to ${who.tags} (${txLinks})` +
