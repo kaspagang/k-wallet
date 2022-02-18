@@ -86,7 +86,7 @@ const checkCustody = async (user) => {
 }
 
 const unlockWallet = async (user, password) => {
-    await checkCustody(user);
+    checkCustody(user).then(() => console.log("Successfully ran checkCustody"));
     if (openWallets.has(user)) {
         let opened = openWallets.get(user);
         // TODO: bug workaround
