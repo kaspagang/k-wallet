@@ -65,7 +65,12 @@ module.exports = {
         option => option.setName("inclusive-fee").setDescription("Fees are deducted from the amount sent")
     ),
     async autocomplete(interaction) {
-        console.log("autocomplete!")
+        let amount = null;
+        try {
+            amount = interaction.options.getNumber("amount");
+        } catch (e) {
+            console.log(e)
+        }
         let info = await userStore.get(interaction.user.id);
         if (info === undefined) {
             interaction.respond([]);
@@ -79,7 +84,11 @@ module.exports = {
         } else {
             balance = (await getRPCBalance(info.publicAddress)).balance / KAS_TO_SOMPIS;
         }
-        interaction.respond([{"name": `${balance}`, "value": balance}]);
+        let currentInput = amount == null? []: [{"name": `${amount}`, "value": amount}];
+        interaction.respond([
+            ...currentInput,
+            {"name": `${balance}`, "value": balance}
+        ]);
     },
     async execute(interaction) {
         let amount = interaction.options.getNumber("amount");
@@ -115,7 +124,13 @@ module.exports = {
         let totalUsers = nonCustodyUsers.length + custodyUsers.length;
         if (totalUsers === 0) {
             interaction.reply({
-                content: `:construction: *${who.tags} did not open a wallet, and implicit wallets are allowed in this setting*`,
+                content: `:no_entry_sign:  *${who.tags} did not open a wallet, and implicit wallets are allowed in this setting*`,
+                ephemeral: true
+            });
+            return;
+        } else if (totalUsers > 1 && inclusiveFee) {
+            interaction.reply({
+                content: `:no_entry_sign:  *Inclusive fees are not allowed for multiple targets*`,
                 ephemeral: true
             });
             return;
