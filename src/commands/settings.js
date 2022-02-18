@@ -1,6 +1,8 @@
 const { updateUser, lockWallet, userStore} = require("../lib/users");
 const {MessageEmbed, MessageActionRow, MessageButton} = require("discord.js");
 
+const BUTTON_TIMEOUT = 5000;
+
 module.exports = {
     name: "settings",
     short: false,
@@ -20,9 +22,8 @@ module.exports = {
         let unlockTimeout = interaction.options.getInteger("unlock-timeout");
         let result = await updateUser(interaction.user.id, secret, address, forward, unlockTimeout).catch(async (e) => {
             await interaction.reply({content: `:warning: *Failed changing settings:*\n> ${e.message}`, ephemeral: true});
-            return;
         });
-        if (result !== null) {
+        if (result !== null && result !== undefined) {
             const row = new MessageActionRow()
                 .addComponents(
                     new MessageButton()
@@ -53,6 +54,18 @@ module.exports = {
     },
     async onButton(interaction) {
         if (interaction.customId === 'delete') {
+            if (interaction.createdAt - interaction.message.createdAt > BUTTON_TIMEOUT) {
+                const row = new MessageActionRow()
+                    .addComponents(
+                        new MessageButton()
+                            .setCustomId('delete')
+                            .setLabel('Delete Wallet')
+                            .setStyle('DANGER')
+                            .setDisabled(true),
+                    );
+                interaction.update({content: ":timer: *Button timed out*", components: [row]});
+                return;
+            }
             const row = new MessageActionRow()
                 .addComponents(
                     new MessageButton()
@@ -62,8 +75,19 @@ module.exports = {
                     //.setDisabled(true),
                 );
             interaction.update({ content: ":warning:  **YOU WILL LOSE ACCESS TO YOUR DISCORD WALLET AND ALL FUNDS. ALL SETTINGS WILL BE RESET. :warning:  This action cannot be undone**.\nDismiss message to cancel. Click approve to continue", embeds: [], components: [row] });
-        }
-        if (interaction.customId === 'delete_approved') {
+        } else if (interaction.customId === 'delete_approved') {
+            if (interaction.createdAt - interaction.message.createdAt > BUTTON_TIMEOUT) {
+                const row = new MessageActionRow()
+                    .addComponents(
+                        new MessageButton()
+                            .setCustomId('delete_approved')
+                            .setLabel('Approve')
+                            .setStyle('DANGER')
+                            .setDisabled(true),
+                    );
+                interaction.update({content: ":timer: *Button timed out*", components: [row]});
+                return;
+            }
             lockWallet(interaction.user.id);
             await userStore.delete(interaction.user.id);
             interaction.update({ content: ":broken_heart:  *Wallet Deleted*", embeds: [], components: [] });
