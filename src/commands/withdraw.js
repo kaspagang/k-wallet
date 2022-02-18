@@ -9,10 +9,47 @@ module.exports = {
     name: "withdraw",
     short: false,
     builder: (namedCommand) => namedCommand.setDescription('Withdraw KAS').addNumberOption(
-        option => option.setName("amount").setDescription("Amount of KAS to Withdraw").setRequired(true)
+        option => option.setName("amount").setDescription("Amount of KAS to Withdraw").setRequired(true).setAutocomplete(true)
     ).addStringOption(
-        option => option.setName("address").setDescription("Destination address for the withdrawel (default: forward-address specified in `settings`)").setRequired(false)
+        option => option.setName("address").setDescription("Destination address for the withdrawel (default: forward-address specified in `settings`)").setRequired(true).setAutocomplete(true)
     ),
+    
+    async autocomplete(interaction) {
+        // In autocomplete, we get string
+        if (interaction.options.data.name === "amount") { 
+            let amount = parseFloat(interaction.options.getNumber("amount"));
+
+            let info = await userStore.get(interaction.user.id);
+            if (info === undefined) {
+                interaction.respond([]);
+                return;
+            }
+
+            let wallet = await unlockWallet(interaction.user.id);
+            let balance = null;
+            if (wallet !== null) {
+                balance = wallet.balance.available / KAS_TO_SOMPIS;
+            } else {
+                balance = (await getRPCBalance(info.publicAddress)).balance / KAS_TO_SOMPIS;
+            }
+            let currentInput = []
+            if (!isNaN(amount)) {
+                currentInput.push({"name": `${amount}`, "value": amount});
+            }
+            interaction.respond([
+                ...currentInput,
+                {"name": `${balance}`, "value": balance}
+            ]);
+    } else if (interaction.options.data.name === "address") {
+            let info = await userStore.get(interaction.user.id);
+       
+            if (info === undefined || !info.forwardAddress) {
+                interaction.respond([]);
+                return;
+            }
+            interaction.respond([{"name" : info.forwardAddress, "value" : info.forwardAddress}])
+    } 
+},
     
     async execute(interaction) {
         let amount = interaction.options.getNumber("amount");
@@ -22,15 +59,8 @@ module.exports = {
         if (info === undefined) {
             await interaction.reply({content: ":construction: *You do not have a wallet. Call `/kwallet unlock` to create one*", ephemeral: true});
             return;
-        } else if (address === null || address === undefined) {
-            if (!info.forwardAddress) {
-                await interaction.reply({content: ":warning: *You did not specify a withdrawel address, or set up a forward address. Please specify a address, or Call `/kwallet settings` and set the forward address*", ephemeral: true});
-                return;
-            } else {
-                address = info.forwardAddress;
-            }
-        }
-
+        } 
+        
         let wallet = await unlockWallet(interaction.user.id);
         if (wallet === null){
             interaction.reply({content: ":warning: *Wallet is locked*", ephemeral: true});
