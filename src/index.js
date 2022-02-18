@@ -22,7 +22,8 @@ client.on("ready", (client) => {
   walletInit(process.env.KASPAD_ADDRESS, process.env.CUSTODIAL);
 });
 client.on('interactionCreate', async interaction => {
-  if (!interaction.isCommand()) return;
+  if (!interaction.isCommand() && !interaction.isAutocomplete()) return;
+
 
   let commandName = interaction.commandName === "kwallet"? interaction.options.getSubcommand() : interaction.commandName.substring(1);
 
@@ -38,11 +39,23 @@ client.on('interactionCreate', async interaction => {
     return;
   }
 
-  try {
-    await command.execute(interaction);
-  } catch (error) {
-    console.error(error);
-    await interaction.reply({ content: ':ambulance: *There was an error while executing this command!*', ephemeral: true });
+  if (interaction.isAutocomplete()) {
+    try {
+      await command.autocomplete(interaction);
+    } catch (error) {
+      interaction.respond([]);
+      console.error(error);
+    }
+  } else {
+    try {
+      await command.execute(interaction);
+    } catch (error) {
+      console.error(error);
+      await interaction.reply({
+        content: ':ambulance: *There was an error while executing this command!*',
+        ephemeral: true
+      });
+    }
   }
 });
 

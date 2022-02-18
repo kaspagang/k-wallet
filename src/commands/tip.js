@@ -1,5 +1,5 @@
 const { MessageMentions: { USERS_PATTERN, ROLES_PATTERN, EVERYONE_PATTERN } } = require('discord.js');
-const { unlockWallet, userStore, getCustodialAddress, addCustody} = require("../lib/users");
+const { unlockWallet, userStore, getCustodialAddress, addCustody, getRPCBalance} = require("../lib/users");
 const {User, GuildMember, Role, Message} = require("discord.js");
 const { KAS_TO_SOMPIS, KATNIP_TX } = require("../constants");
 
@@ -56,16 +56,37 @@ module.exports = {
     builder: (namedCommand) => namedCommand.setDescription('Sends some KAS').addStringOption(
         option => option.setName("who").setDescription("Who to send the tokens (user, channel, ...). Splits the tokens equally").setRequired(true)
     ).addNumberOption(
-        option => option.setName("amount").setDescription("Amount of KAS to send").setRequired(true)
+        option => option.setName("amount").setDescription("Amount of KAS to send").setRequired(true).setAutocomplete(true)
     ).addStringOption(
         option => option.setName("message").setDescription("Message to send alongside the tip")
     ).addBooleanOption(
         option => option.setName("allow-hold").setDescription("Send funds for holding if user does not have wallet (default True for single user, False for roles)")
+    ).addBooleanOption(
+        option => option.setName("inclusive-fee").setDescription("Fees are deducted from the amount sent")
     ),
+    async autocomplete(interaction) {
+        console.log("autocomplete!")
+        let info = await userStore.get(interaction.user.id);
+        if (info === undefined) {
+            interaction.respond([]);
+            return;
+        }
+
+        let wallet = await unlockWallet(interaction.user.id);
+        let balance = null;
+        if (wallet !== null) {
+            balance = wallet.balance.available / KAS_TO_SOMPIS;
+        } else {
+            balance = (await getRPCBalance(info.publicAddress)).balance / KAS_TO_SOMPIS;
+        }
+        interaction.respond([{"name": "Max", "value": balance}]);
+    },
     async execute(interaction) {
         let amount = interaction.options.getNumber("amount");
         let message = interaction.options.getString("message");
         let allowHold = interaction.options.getBoolean("allow-hold")
+        let inclusiveFee = interaction.options.getBoolean("inclusive-fee")
+        inclusiveFee = inclusiveFee === null? false : inclusiveFee;
         let who = await getMentions(interaction, interaction.options.getString("who"));
 
         let users = new Map();
@@ -125,7 +146,8 @@ module.exports = {
         let tx = await wallet.submitTransaction({
             targets,
             changeAddrOverride: changeAddress,
-            calculateNetworkFee: true
+            calculateNetworkFee: true,
+            inclusiveFee
         }).catch((e) => {
             console.log(e);
             let message = e.message === undefined ? e : e.message;
