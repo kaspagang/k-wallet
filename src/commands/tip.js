@@ -66,29 +66,34 @@ module.exports = {
     ),
     async autocomplete(interaction) {
         // In autocomplete, we get string
-        let amount = parseFloat(interaction.options.getNumber("amount"));
+        let {name, value} = interaction.options.getFocused(true)
+        if (name === "amount") {
+            let amount = parseFloat(value);
 
-        let info = await userStore.get(interaction.user.id);
-        if (info === undefined) {
-            interaction.respond([]);
-            return;
-        }
+            let info = await userStore.get(interaction.user.id);
+            if (info === undefined) {
+                interaction.respond([]);
+                return;
+            }
 
-        let wallet = await unlockWallet(interaction.user.id);
-        let balance = null;
-        if (wallet !== null) {
-            balance = wallet.balance.available / KAS_TO_SOMPIS;
+            let wallet = await unlockWallet(interaction.user.id);
+            let balance = null;
+            if (wallet !== null) {
+                balance = wallet.balance.available / KAS_TO_SOMPIS;
+            } else {
+                balance = (await getRPCBalance(info.publicAddress)).balance / KAS_TO_SOMPIS;
+            }
+            let currentInput = []
+            if (!isNaN(amount)) {
+                currentInput.push({"name": `${amount}`, "value": amount});
+            }
+            interaction.respond([
+                ...currentInput,
+                {"name": `${balance}`, "value": balance}
+            ]);
         } else {
-            balance = (await getRPCBalance(info.publicAddress)).balance / KAS_TO_SOMPIS;
+            interaction.respond([]);
         }
-        let currentInput = []
-        if (!isNaN(amount)) {
-            currentInput.push({"name": `${amount}`, "value": amount});
-        }
-        interaction.respond([
-            ...currentInput,
-            {"name": `${balance}`, "value": balance}
-        ]);
     },
     async execute(interaction) {
         let amount = interaction.options.getNumber("amount");
