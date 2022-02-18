@@ -43,13 +43,22 @@ module.exports = {
                 {"name": `${balance}`, "value": balance}
             ]);
     } else if (currentOption.name === "address") {
+            let address = interaction.options.getString("address"))
             let info = await userStore.get(interaction.user.id);
        
             if (info === undefined || !info.forwardAddress) {
                 interaction.respond([]);
                 return;
             }
-            interaction.respond([{"name" : info.forwardAddress, "value" : info.forwardAddress}])
+            
+            let currentInput = []
+            if (!isNaN(address)) {
+                currentInput.push({"name": address, "value": address});
+            }
+            interaction.respond([
+                ...currentInput,
+                {"name" : info.forwardAddress, "value" : info.forwardAddress}
+            ])
     } 
 },
     
