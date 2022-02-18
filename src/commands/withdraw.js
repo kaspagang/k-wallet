@@ -43,7 +43,7 @@ module.exports = {
                 {"name": `${balance}`, "value": balance}
             ]);
     } else if (currentOption.name === "address") {
-            let address = interaction.options.getString("address"))
+            let address = interaction.options.getString("address");
             let info = await userStore.get(interaction.user.id);
        
             if (info === undefined || !info.forwardAddress) {
@@ -58,7 +58,7 @@ module.exports = {
             interaction.respond([
                 ...currentInput,
                 {"name" : info.forwardAddress, "value" : info.forwardAddress}
-            ])
+            ]);
     } 
 },
     
