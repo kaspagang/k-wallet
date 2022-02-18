@@ -18,7 +18,7 @@ module.exports = {
         // In autocomplete, we get string
         let optionName;
         optionName = interaction.options._hoistedOptions;
-        console.log(option_name)
+        console.log(OptionName)
         if (optionName === "amount") { 
             let amount = parseFloat(interaction.options.getNumber("amount"));
 
