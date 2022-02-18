@@ -52,7 +52,7 @@ module.exports = {
             }
             
             let currentInput = []
-            if (!isNaN(address)) {
+            if (address) {
                 currentInput.push({"name": address, "value": address});
             }
             interaction.respond([
