@@ -16,6 +16,12 @@ for (const file of commandFiles) {
   // Set a new item in the Collection
   // With the key as the command name and the value as the exported module
   if (command.name !== undefined) client.commands.set(command.name, command);
+  if (command.onButton !== undefined) {
+    client.on('interactionCreate', async interaction => {
+      if (!interaction.isButton()) return;
+      await command.onButton(interaction);
+    });
+  }
 }
 
 client.on("ready", (client) => {
@@ -39,14 +45,7 @@ client.on('interactionCreate', async interaction => {
     return;
   }
 
-  if (interaction.isAutocomplete()) {
-    try {
-      await command.autocomplete(interaction);
-    } catch (error) {
-      interaction.respond([]);
-      console.error(error);
-    }
-  } else {
+  if (interaction.isCommand()) {
     try {
       await command.execute(interaction);
     } catch (error) {
@@ -55,6 +54,13 @@ client.on('interactionCreate', async interaction => {
         content: ':ambulance: *There was an error while executing this command!*',
         ephemeral: true
       });
+    }
+  } else if (interaction.isAutocomplete()) {
+    try {
+      await command.autocomplete(interaction);
+    } catch (error) {
+      interaction.respond([]);
+      console.error(error);
     }
   }
 });

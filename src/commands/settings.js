@@ -1,5 +1,5 @@
-const { updateUser } = require("../lib/users");
-const {MessageEmbed} = require("discord.js");
+const { updateUser, lockWallet, userStore} = require("../lib/users");
+const {MessageEmbed, MessageActionRow, MessageButton} = require("discord.js");
 
 module.exports = {
     name: "settings",
@@ -18,10 +18,20 @@ module.exports = {
         let address = interaction.options.getString("forward-address");
         let forward = interaction.options.getBoolean("auto-forward");
         let unlockTimeout = interaction.options.getInteger("unlock-timeout");
-        let result = await updateUser(interaction.user.id, secret, address, forward, unlockTimeout, hideAddress).catch(async (e) => {
-            await interaction.reply({content: `:warning: *Failed chaning settings:*\n> ${e.message}`, ephemeral: true});
+        let result = await updateUser(interaction.user.id, secret, address, forward, unlockTimeout).catch(async (e) => {
+            await interaction.reply({content: `:warning: *Failed changing settings:*\n> ${e.message}`, ephemeral: true});
+            return;
         });
         if (result !== null) {
+            const row = new MessageActionRow()
+                .addComponents(
+                    new MessageButton()
+                        .setCustomId('delete')
+                        .setLabel('Delete Wallet')
+                        .setStyle('DANGER')
+                        //.setDisabled(true),
+                );
+
             const fields = [
                 { name: 'Forward Address', value: result.forwardAddress ?  result.forwardAddress : "*Not set*"},
                 { name: 'Auto Forward', value: result.forward? ":arrow_up: Yes" : ':no_entry: No', inline: true},
@@ -36,8 +46,27 @@ module.exports = {
                         )
                         .setTimestamp()
                 ],
+                components: [ row ],
                 ephemeral: true
             });
         }
     },
+    async onButton(interaction) {
+        if (interaction.customId === 'delete') {
+            const row = new MessageActionRow()
+                .addComponents(
+                    new MessageButton()
+                        .setCustomId('delete_approved')
+                        .setLabel('Approve')
+                        .setStyle('DANGER')
+                    //.setDisabled(true),
+                );
+            interaction.update({ content: ":warning:  **YOU WILL LOSE ACCESS TO YOUR DISCORD WALLET AND ALL FUNDS. ALL SETTINGS WILL BE RESET. :warning:  This action cannot be undone**.\nDismiss message to cancel. Click approve to continue", embeds: [], components: [row] });
+        }
+        if (interaction.customId === 'delete_approved') {
+            lockWallet(interaction.user.id);
+            await userStore.delete(interaction.user.id);
+            interaction.update({ content: ":broken_heart:  *Wallet Deleted*", embeds: [], components: [] });
+        }
+    }
 }

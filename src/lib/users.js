@@ -136,10 +136,13 @@ const getAddress = async (user) => {
     return userInfo.publicAddress
 }
 
-const updateUser = async (user, password, address, forward, unlockTimeout, hideAddress) => {
+const updateUser = async (user, password, address, forward, unlockTimeout) => {
     //wallet = new Wallet(null, null, {network, rpc}, {disableAddressDerivation: true});
     let userInfo = await userStore.get(user);
     if (userInfo === undefined) {
+        if (password === null || password === undefined) {
+            throw new Error("No password provided to encrypt wallet")
+        }
         if (address === null || address === undefined || Address.getValidationError(address)) {
             address = "";
         }
@@ -158,7 +161,6 @@ const updateUser = async (user, password, address, forward, unlockTimeout, hideA
             forwardAddress: address,
             forward: forward,
             unlockTimeout: unlockTimeout,
-            hideAddress: false,
         };
         openWallets.set(user, {
             wallet,
@@ -185,9 +187,6 @@ const updateUser = async (user, password, address, forward, unlockTimeout, hideA
         }
         if (unlockTimeout !== null && unlockTimeout !== undefined){
             userInfo.unlockTimeout = unlockTimeout;
-        }
-        if (hideAddress !== null && hideAddress !== undefined){
-            userInfo.hideAddress = hideAddress;
         }
     }
     await userStore.set(user, userInfo)
