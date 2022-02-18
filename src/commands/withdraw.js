@@ -16,10 +16,9 @@ module.exports = {
     
     async autocomplete(interaction) {
         // In autocomplete, we get string
-        let optionName;
-        optionName = interaction.options._hoistedOptions;
-        console.log(optionName)
-        if (optionName === "amount") { 
+        let currentOption =  interaction.options.getFocused(true);
+
+        if (currentOption.name === "amount") { 
             let amount = parseFloat(interaction.options.getNumber("amount"));
 
             let info = await userStore.get(interaction.user.id);
@@ -43,7 +42,7 @@ module.exports = {
                 ...currentInput,
                 {"name": `${balance}`, "value": balance}
             ]);
-    } else if (optionName === "address") {
+    } else if (currentOption.name === "address") {
             let info = await userStore.get(interaction.user.id);
        
             if (info === undefined || !info.forwardAddress) {
