@@ -184,8 +184,12 @@ module.exports = {
                     await addCustody(user.id, userAmount)
                 }));
             }
+            let txLinks = tx.txids.map((txid, i) => (
+                (i === (tx.txids.length - 1) && i > 0)? "and " : "") +
+                `[here](${KATNIP_TX}${tx.txid})`
+            ).reduce((a,b) => a + ", " + b)
             interaction.reply(
-                `:moneybag: ${interaction.user} [sent](${KATNIP_TX}${tx.txid}) ${amount} KAS to ${who.tags}` +
+                `:moneybag: ${interaction.user} sent ${amount} KAS to ${who.tags} (${txLinks})` +
                 (message ? `\n> ${message}` : "")
             )
         }

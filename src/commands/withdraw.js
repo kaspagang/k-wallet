@@ -79,7 +79,7 @@ module.exports = {
             interaction.reply({content: `:warning:*Failed submitting transaction:*\n> ${message}`, ephemeral: true})
         }).then((tx) => {
             if (tx !== null && tx !== undefined) {
-                interaction.reply({content: `:moneybag: ${interaction.user} withdrew ${amount} KAS to [${address}](${KATNIP_ADDR}${address}) in [${tx.txid}](${KATNIP_TX}${tx.txid})`, ephemeral: true})
+                interaction.reply({content: `:moneybag: ${interaction.user} withdrew ${amount} KAS to [${address}](${KATNIP_ADDR}${address}) in [${tx.txids[0]}](${KATNIP_TX}${tx.txids[0]})`, ephemeral: true})
             }
         });
     },
