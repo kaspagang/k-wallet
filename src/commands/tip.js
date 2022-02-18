@@ -65,12 +65,9 @@ module.exports = {
         option => option.setName("inclusive-fee").setDescription("Fees are deducted from the amount sent")
     ),
     async autocomplete(interaction) {
-        let amount = null;
-        try {
-            amount = interaction.options.getNumber("amount");
-        } catch (e) {
-            console.log(e)
-        }
+        // In autocomplete, we get string
+        let amount = parseFloat(interaction.options.getNumber("amount"));
+
         let info = await userStore.get(interaction.user.id);
         if (info === undefined) {
             interaction.respond([]);
@@ -84,7 +81,10 @@ module.exports = {
         } else {
             balance = (await getRPCBalance(info.publicAddress)).balance / KAS_TO_SOMPIS;
         }
-        let currentInput = amount == null? []: [{"name": `${amount}`, "value": amount}];
+        let currentInput = []
+        if (isNaN(amount)) {
+            currentInput.push({"name": `${amount}`, "value": amount});
+        }
         interaction.respond([
             ...currentInput,
             {"name": `${balance}`, "value": balance}
