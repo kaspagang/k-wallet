@@ -73,7 +73,8 @@ module.exports = {
             targets: targets,
             changeAddrOverride: info.publicAddress,
             fee: 0,
-            networkFeeMax: 0
+            networkFeeMax: 0,
+            calculateNetworkFee: true,
         }
         wallet.submitTransaction(txParamsArg).then(async (tx) => {
             await interaction.editReply({content: `:dollar: Split successful ([here](${KATNIP_TX}${tx.txids[0]}))`})
