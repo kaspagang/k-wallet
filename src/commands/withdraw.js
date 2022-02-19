@@ -42,25 +42,25 @@ module.exports = {
                 ...currentInput,
                 {"name": `${balance}`, "value": balance}
             ]);
-    } else if (currentOption.name === "address") {
-            let address = interaction.options.getString("address");
-            let info = await userStore.get(interaction.user.id);
-       
-            if (info === undefined || !info.forwardAddress) {
-                interaction.respond([]);
-                return;
-            }
-            
-            let currentInput = []
-            if (address) {
-                currentInput.push({"name": address, "value": address});
-            }
-            interaction.respond([
-                ...currentInput,
-                {"name" : info.forwardAddress, "value" : info.forwardAddress}
-            ]);
-    } 
-},
+        } else if (currentOption.name === "address") {
+                let address = interaction.options.getString("address");
+                let info = await userStore.get(interaction.user.id);
+
+                if (info === undefined || !info.forwardAddress) {
+                    interaction.respond([]);
+                    return;
+                }
+
+                let currentInput = []
+                if (address) {
+                    currentInput.push({"name": address, "value": address});
+                }
+                interaction.respond([
+                    ...currentInput,
+                    {"name" : info.forwardAddress, "value" : info.forwardAddress}
+                ]);
+        }
+    },
     
     async execute(interaction) {
         let amount = interaction.options.getNumber("amount");
