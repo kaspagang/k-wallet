@@ -3,6 +3,9 @@ const { unlockWallet, userStore, getCustodialAddress, addCustody, getRPCBalance}
 const {User, GuildMember, Role, Message} = require("discord.js");
 const { KAS_TO_SOMPIS, KATNIP_TX } = require("../constants");
 
+//const TRANSACTION_SPLIT_MAX = 20;
+const TRANSACTION_SPLIT_MAX = null;
+
 async function getMentions(interaction, mention) {
     let match;
     let mentions = [];
@@ -167,7 +170,8 @@ module.exports = {
             targets,
             changeAddrOverride: changeAddress,
             calculateNetworkFee: true,
-            inclusiveFee
+            inclusiveFee,
+            maxSplitting: TRANSACTION_SPLIT_MAX,
         }).catch((e) => {
             console.log(e);
             let message = e.message === undefined ? e : e.message;

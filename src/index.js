@@ -65,7 +65,7 @@ client.on('interactionCreate', async interaction => {
       await command.autocomplete(interaction);
     } catch (error) {
       try {
-        interaction.respond([]);
+        await interaction.respond([]);
       } catch (e) {
         console.log("Could not report default values")
         console.log(e);
