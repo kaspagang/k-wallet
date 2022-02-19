@@ -1,10 +1,21 @@
 const { MessageMentions: { USERS_PATTERN, ROLES_PATTERN, EVERYONE_PATTERN } } = require('discord.js');
-const { unlockWallet, userStore, getCustodialAddress, addCustody, getRPCBalance} = require("../lib/users");
+const { unlockWallet, userStore, getCustodialAddress, addCustody, getRPCBalance, addBlockCallback} = require("../lib/users");
 const {User, GuildMember, Role, Message} = require("discord.js");
 const { KAS_TO_SOMPIS, KATNIP_TX } = require("../constants");
 
-//const TRANSACTION_SPLIT_MAX = 20;
-const TRANSACTION_SPLIT_MAX = null;
+const TRANSACTION_SPLIT_MAX = 20;
+const PENDING_SCORE_DIFF = 100;
+//const TRANSACTION_SPLIT_MAX = null;
+
+function statusToMessage({from, to, amount, txs, message}, daaScore) {
+    let txLinks = [...txs.entries()].map(([txid, txDaaScore], i) => (
+        (i === (txs.length - 1) && i > 0)? "and " : "") +
+        `[here](${KATNIP_TX}${txid})` +
+        (txDaaScore !== null && daaScore !== null? daaScore-txDaaScore > PENDING_SCORE_DIFF? ":heavy_check_mark: " : ":hourglass:" : "")
+    ).reduce((a,b) => a + ", " + b)
+    return `:moneybag: ${from} sent ${amount} KAS to ${to} (${txLinks})` +
+    (message ? `\n> ${message}` : "")
+}
 
 async function getMentions(interaction, mention) {
     let match;
@@ -188,15 +199,42 @@ module.exports = {
                     await addCustody(user.id, userAmount)
                 }));
             }
-            let txLinks = tx.txids.map((txid, i) => (
-                (i === (tx.txids.length - 1) && i > 0)? "and " : "") +
-                `[here](${KATNIP_TX}${txid})`
-            ).reduce((a,b) => a + ", " + b)
-            await interaction.editReply({content: "KAS transfer processed succesfully"})
-            await interaction.followUp(
-                `:moneybag: ${interaction.user} sent ${amount} KAS to ${who.tags} (${txLinks})` +
-                (message ? `\n> ${message}` : "")
-            )
+
+            let txStatus = {
+                from: interaction.user,
+                to: who.tags,
+                amount: amount,
+                txs: new Map(),
+                message: message
+            };
+            for (let txid of tx.txids){
+                txStatus.txs.set(txid, null);
+            }
+
+            await interaction.editReply({content: "KAS transfer processed succesfully"});
+            let followUp = await interaction.followUp(statusToMessage(txStatus, null));
+
+            // Waiting for reports
+            addBlockCallback(
+                async (block) => {
+                    let changed = false;
+                    const daaScore = parseInt(block.header.daaScore);
+                    for (let txid of block.verboseData.transactionIds) {
+                        if (txStatus.txs.has(txid)) {
+                            txStatus.txs.set(txid, daaScore);
+                            changed = true;
+                        }
+                    }
+
+                    if (changed) {
+                        await interaction.webhook.editMessage(followUp, statusToMessage(txStatus, daaScore));
+                    }
+                    // If at least one tx is not final
+                    return !([...txStatus.txs.values()].map(
+                        (txDaaScore) => (txDaaScore !== null && daaScore-txDaaScore > PENDING_SCORE_DIFF)
+                    ).reduce((a,b) => a && b));
+                }
+            );
         }
 
         if (!interaction.replied) {

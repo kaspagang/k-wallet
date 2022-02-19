@@ -11,6 +11,7 @@ const UNLOCK_TIMEOUT = 600000;
 const userStore = new Keyv('sqlite://users.db');
 const custodyStore = new Keyv('sqlite://custody.db');
 const openWallets = new Map();
+let awaitingBlockCallbacks = [];
 
 const network = "kaspa";
 const { port } = Wallet.networkTypes[network];
@@ -43,6 +44,12 @@ const walletInit = async (address, custodialMnemonic) => {
     await custodialWallet.wallet.sync();
     console.log(`Custodial public address: ${custodialWallet.publicAddress}. Balance: ${JSON.stringify(custodialWallet.wallet.balance)}`)
 
+    rpc.subscribeBlockAdded(async ({block}) => {
+        awaitingBlockCallbacks = (await Promise.all(
+            awaitingBlockCallbacks.map(async (callback) => ({callback, result: await callback(block)}))
+        )).filter(({result}) => result).map(({callback}) => callback);
+    })
+
     setInterval(() => {
         let time = Date.now();
         for (let user of openWallets.keys()){
@@ -53,6 +60,10 @@ const walletInit = async (address, custodialMnemonic) => {
         }
     }, 5000)
     console.log("Ready!");
+}
+
+const addBlockCallback = (callback) => {
+    awaitingBlockCallbacks.push(callback);
 }
 
 const getCustodialAddress = () => {
@@ -194,5 +205,5 @@ const updateUser = async (user, password, address, forward, unlockTimeout) => {
 }
 
 module.exports = {
-    getRPCBalance, userStore, walletInit, unlockWallet, lockWallet, getAddress, updateUser, getCustodialAddress, addCustody
+    getRPCBalance, userStore, walletInit, unlockWallet, lockWallet, getAddress, updateUser, getCustodialAddress, addCustody, addBlockCallback
 }
