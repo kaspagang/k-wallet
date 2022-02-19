@@ -6,6 +6,11 @@ module.exports = {
     short: false,
     builder: (namedCommand) => namedCommand.setDescription('Compound transactions'),
     async execute(interaction) {
+        const info = await userStore.get(interaction.user.id);
+        if (info === undefined) {
+            await interaction.reply({content:":construction: *You did not open a wallet, so what do you want to compound?*", ephemeral: true});
+            return;
+        }
         const wallet = await unlockWallet(interaction.user.id);
         if (!wallet) {
             await interaction.reply({content: ":warning: *Wallet is locked*", ephemeral: true})
@@ -14,8 +19,8 @@ module.exports = {
         interaction.deferReply({ephemeral: true});
 
         let txParamsArg = {
-            targets: [{address: publicAddress, amount: -1}],
-            changeAddrOverride: publicAddress,
+            targets: [{address: info.publicAddress, amount: -1}],
+            changeAddrOverride: info.publicAddress,
             fee: 0,
             networkFeeMax: 0,
             compoundingUTXO:true,

@@ -51,10 +51,17 @@ client.on('interactionCreate', async interaction => {
     } catch (error) {
       console.error(error);
       try {
-        await interaction.reply({
-          content: ':ambulance: *There was an error while executing this command!*',
-          ephemeral: true
-        });
+        if (!interaction.replied) {
+          await interaction.reply({
+            content: ':ambulance: *There was an error while executing this command!*',
+            ephemeral: true
+          });
+        } else {
+          await interaction.followUp({
+            content: ':ambulance: *There was an error while executing this command!*',
+            ephemeral: true
+          });
+        }
       } catch (e) {
         console.log("Could not report error to client")
         console.log(e);
@@ -65,7 +72,9 @@ client.on('interactionCreate', async interaction => {
       await command.autocomplete(interaction);
     } catch (error) {
       try {
-        await interaction.respond([]);
+        if (!interaction.responded) {
+          await interaction.respond([]);
+        }
       } catch (e) {
         console.log("Could not report default values")
         console.log(e);
