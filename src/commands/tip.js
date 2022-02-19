@@ -131,13 +131,13 @@ module.exports = {
         let custodyUsers = users.filter((u) => u.allowHold && u.userInfo === undefined);
         let totalUsers = nonCustodyUsers.length + custodyUsers.length;
         if (totalUsers === 0) {
-            interaction.reply({
+            await interaction.reply({
                 content: `:no_entry_sign:  *${who.tags} did not open a wallet, and implicit wallets are allowed in this setting*`,
                 ephemeral: true
             });
             return;
         } else if (totalUsers > 1 && inclusiveFee) {
-            interaction.reply({
+            await interaction.reply({
                 content: `:no_entry_sign:  *Inclusive fees are not allowed for multiple targets*`,
                 ephemeral: true
             });
@@ -146,7 +146,7 @@ module.exports = {
 
         let wallet = await unlockWallet(interaction.user.id);
         if (wallet === null) {
-            interaction.reply({content: ":warning: *Wallet is locked*", ephemeral: true});
+            await interaction.reply({content: ":warning: *Wallet is locked*", ephemeral: true});
             return;
         }
 
@@ -173,10 +173,10 @@ module.exports = {
             calculateNetworkFee: true,
             inclusiveFee,
             maxSplitting: TRANSACTION_SPLIT_MAX,
-        }).catch((e) => {
+        }).catch(async (e) => {
             console.log(e);
             let message = e.message === undefined ? e : e.message;
-            interaction.editReply({
+            await interaction.editReply({
                 content: `:warning:*Failed submitting transaction:*\n> ${message}`,
             })
         })
