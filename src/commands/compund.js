@@ -37,7 +37,8 @@ module.exports = {
         wallet.submitTransaction(txParamsArg).then(async (tx) => {
             await interaction.editReply({content: `:dollar: Compounding successful ([here](${KATNIP_TX}${tx.txids[0]}))`})
         }).catch(async (e) => {
-            await interaction.editReply({content: `:warning: *Compounding failed.* \n> ${e}`})
+            let message = e.message === undefined ? e : e.message;
+            await interaction.editReply({content: `:warning: *Compounding failed.* \n> ${message}`})
         });
     },
 }
