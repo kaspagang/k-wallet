@@ -30,7 +30,7 @@ const getRPCBalance = async (address) => {
     for (let utxo of res.entries) {
         balance += parseInt(utxo.utxoEntry.amount);
     }
-    return {balance, utxoCount: res.size, error: null};
+    return {balance, utxoCount: res.entries.length, error: null};
 }
 
 const walletInit = async (address, custodialMnemonic) => {
