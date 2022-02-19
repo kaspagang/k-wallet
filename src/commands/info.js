@@ -18,19 +18,23 @@ module.exports = {
         }
         let locked = true;
         let wallet = await unlockWallet(interaction.user.id);
-        let balance = ":construction: Currently, balance is presented only is wallet is unlocked.";
+        let balance = ":tools: Failed to calculate.";
+        let utxoCount = ":tools: Failed to calculate.";
         let mnemonic = ""
         if (wallet !== null) {
             balance = `${wallet.balance.available / KAS_TO_SOMPIS} KAS (${wallet.balance.pending / KAS_TO_SOMPIS} Pending)`;
+            utxoCount = `${wallet.utxoSet.utxos.confirmed.size} (${wallet.utxoSet.utxos.pending.size} Pending)`
             if (showSecret) {
                 mnemonic = `**Mnemonic**: ${wallet.mnemonic}`
             }
         } else {
             let res = await getRPCBalance(info.publicAddress);
             if (res.error) {
-                balance = `:warning: *Error fetching balance*:\n| ${res.error}`
+                balance = `:warning: *Error fetching balance*:\n> ${res.error}`
+                utxoCount = `:warning: *Error fetching UTXO count*:\n> ${res.error}`
             } else {
                 balance = `${res.balance / KAS_TO_SOMPIS} KAS`
+                utxoCount = `${res.utxoCount}`
             }
             locked = false;
         }
@@ -38,7 +42,8 @@ module.exports = {
         let fields = [
             { name: 'Wallet status', value: locked? ":unlock:" : ":lock:" },
             { name: 'Tipper Public Address', value: `[${info.publicAddress}](${KATNIP_ADDR}${info.publicAddress})` },
-            { name: 'Balance', value: balance },
+            { name: 'Balance', value: balance, inline: true },
+            { name: 'UTXO Count', value: utxoCount, inline: true },
             { name: 'Tip Destination', value: `[${tipAddress}](${KATNIP_ADDR}${tipAddress})` },
         ]
         if (showSecret && wallet !== null) {

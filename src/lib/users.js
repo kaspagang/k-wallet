@@ -24,13 +24,13 @@ const getRPCBalance = async (address) => {
     if (rpc === null) throw new Error("RPC not initialized");
     let res = await rpc.getUtxosByAddresses([address]);
     if (res.error) {
-        return {balance: null, error: res.error.message};
+        return {balance: null, utxoCount: null, error: res.error.message};
     }
     let balance = 0
     for (let utxo of res.entries) {
         balance += parseInt(utxo.utxoEntry.amount);
     }
-    return {balance, error: null};
+    return {balance, utxoCount: res.size, error: null};
 }
 
 const walletInit = async (address, custodialMnemonic) => {
