@@ -7,11 +7,11 @@ const TRANSACTION_SPLIT_MAX = 20;
 const PENDING_SCORE_DIFF = 100;
 //const TRANSACTION_SPLIT_MAX = null;
 
-function statusToMessage({from, to, amount, txs, message}, daaScore) {
-    let txLinks = [...txs.entries()].map(([txid, txDaaScore], i) => (
+function statusToMessage({from, to, amount, txs, message}) {
+    let txLinks = [...txs.entries()].map(([txid, {daaScore: txDaaScore, finalized}], i) => (
         (i === (txs.length - 1) && i > 0)? "and " : "") +
         `[here](${KATNIP_TX}${txid})` +
-        (txDaaScore !== null && daaScore !== null? daaScore-txDaaScore > PENDING_SCORE_DIFF? ":heavy_check_mark: " : ":hourglass:" : "")
+        (txDaaScore !== null? finalized? ":heavy_check_mark: " : ":hourglass:" : "")
     ).reduce((a,b) => a + ", " + b)
     return `:moneybag: ${from} sent ${amount} KAS to ${to} (${txLinks})` +
     (message ? `\n> ${message}` : "")
@@ -208,11 +208,11 @@ module.exports = {
                 message: message
             };
             for (let txid of tx.txids){
-                txStatus.txs.set(txid, null);
+                txStatus.txs.set(txid, {daaScore: null, finalized: false});
             }
 
             await interaction.editReply({content: "KAS transfer processed succesfully"});
-            let followUp = await interaction.followUp(statusToMessage(txStatus, null));
+            let followUp = await interaction.followUp(statusToMessage(txStatus));
 
             // Waiting for reports
             addBlockCallback(
@@ -220,14 +220,20 @@ module.exports = {
                     let changed = false;
                     const daaScore = parseInt(block.header.daaScore);
                     for (let txid of block.verboseData.transactionIds) {
-                        if (txStatus.txs.has(txid)) {
-                            txStatus.txs.set(txid, daaScore);
+                        if (txStatus.txs.get(txid)?.finalized === false) {
+                            txStatus.txs.set(txid, {daaScore, finalized: false});
+                            changed = true;
+                        }
+                    }
+                    for (let [txid, {daaScore: txDaaScore, finalized}] of txStatus.txs) {
+                        if (txDaaScore !== null && !finalized && daaScore - txDaaScore > PENDING_SCORE_DIFF){
+                            txStatus.txs.set(txid, {daaScore: txDaaScore, finalized: true});
                             changed = true;
                         }
                     }
 
                     if (changed) {
-                        await interaction.webhook.editMessage(followUp, statusToMessage(txStatus, daaScore));
+                        await interaction.webhook.editMessage(followUp, statusToMessage(txStatus));
                     }
                     // If at least one tx is not final
                     return !([...txStatus.txs.values()].map(
