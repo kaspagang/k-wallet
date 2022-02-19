@@ -40,12 +40,13 @@ async function main() {
         wallet = await Wallet.import(password, userInfo.mnemonic, {
           network,
           rpc
-        }, {disableAddressDerivation: false, syncOnce: true});
+        }, {disableAddressDerivation: true, syncOnce: true});
       } catch (err) {
         console.log("Failed opening wallet. Try a different password")
         rpc.disconnect();
         return 1;
       }
+      await wallet.sync(true);
       await wallet.sync(true);
       if (action === "compound") {
         try {
@@ -73,7 +74,6 @@ async function compound(wallet, publicAddress){
     fee: 0,
     networkFeeMax: 0,
     compoundingUTXO:true,
-    compoundingUTXOMaxCount: 40
   }
   let res = await wallet.submitTransaction(txParamsArg);
 }
