@@ -150,7 +150,7 @@ module.exports = {
             return;
         }
 
-        interaction.deferReply({ephemeral: true});
+        await interaction.deferReply({ephemeral: true});
         let changeAddress = (await userStore.get(interaction.user.id)).publicAddress;
 
         const userAmount = amount/totalUsers;
@@ -192,7 +192,7 @@ module.exports = {
                 (i === (tx.txids.length - 1) && i > 0)? "and " : "") +
                 `[here](${KATNIP_TX}${txid})`
             ).reduce((a,b) => a + ", " + b)
-            await interaction.editReply({content: "Kas transfer processed succesfully"})
+            await interaction.editReply({content: "KAS transfer processed succesfully"})
             await interaction.followUp(
                 `:moneybag: ${interaction.user} sent ${amount} KAS to ${who.tags} (${txLinks})` +
                 (message ? `\n> ${message}` : "")

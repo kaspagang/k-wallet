@@ -52,10 +52,17 @@ client.on('interactionCreate', async interaction => {
       console.error(error);
       try {
         if (!interaction.replied) {
-          await interaction.reply({
-            content: ':ambulance: *There was an error while executing this command!*',
-            ephemeral: true
-          });
+          if (!interaction.deferred) {
+            await interaction.reply({
+              content: ':ambulance: *There was an error while executing this command!*',
+              ephemeral: true
+            });
+          } else {
+            await interaction.editReply({
+              content: ':ambulance: *There was an error while executing this command!*',
+              ephemeral: true
+            });
+          }
         } else {
           await interaction.followUp({
             content: ':ambulance: *There was an error while executing this command!*',
