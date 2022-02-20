@@ -12,6 +12,7 @@ const userStore = new Keyv('sqlite://users.db');
 const custodyStore = new Keyv('sqlite://custody.db');
 const openWallets = new Map();
 let awaitingBlockCallbacks = [];
+let awaitingDaaScoreCallbacks = []
 
 const network = "kaspa";
 const { port } = Wallet.networkTypes[network];
@@ -50,6 +51,12 @@ const walletInit = async (address, custodialMnemonic) => {
         )).filter(({result}) => result).map(({callback}) => callback);
     })
 
+    rpc.subscribeVirtualDaaScoreChanged(async ({virtualDaaScore}) => {
+        awaitingDaaScoreCallbacks = (await Promise.all(
+            awaitingDaaScoreCallbacks.map(async (callback) => ({callback, result: await callback(virtualDaaScore)}))
+        )).filter(({result}) => result).map(({callback}) => callback);
+    })
+
     setInterval(() => {
         let time = Date.now();
         for (let user of openWallets.keys()){
@@ -64,6 +71,10 @@ const walletInit = async (address, custodialMnemonic) => {
 
 const addBlockCallback = (callback) => {
     awaitingBlockCallbacks.push(callback);
+}
+
+const addDaaScoreCallback = (callback) => {
+    awaitingDaaScoreCallbacks.push(callback);
 }
 
 const getCustodialAddress = () => {
@@ -205,5 +216,5 @@ const updateUser = async (user, password, address, forward, unlockTimeout) => {
 }
 
 module.exports = {
-    getRPCBalance, userStore, walletInit, unlockWallet, lockWallet, getAddress, updateUser, getCustodialAddress, addCustody, addBlockCallback
+    getRPCBalance, userStore, walletInit, unlockWallet, lockWallet, getAddress, updateUser, getCustodialAddress, addCustody, addBlockCallback, addDaaScoreCallback
 }

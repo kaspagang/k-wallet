@@ -1,5 +1,5 @@
 const { MessageMentions: { USERS_PATTERN, ROLES_PATTERN, EVERYONE_PATTERN } } = require('discord.js');
-const { unlockWallet, userStore, getCustodialAddress, addCustody, getRPCBalance, addBlockCallback} = require("../lib/users");
+const { unlockWallet, userStore, getCustodialAddress, addCustody, getRPCBalance, addBlockCallback, addDaaScoreCallback} = require("../lib/users");
 const {User, GuildMember, Role, Message} = require("discord.js");
 const { KAS_TO_SOMPIS, KATNIP_TX } = require("../constants");
 
@@ -194,10 +194,10 @@ module.exports = {
 
         if (tx !== null && tx !== undefined) {
             if (custodyUsers.length > 0) {
-                await Promise.all(custodyUsers.map(async ({user}) => {
+                Promise.all(custodyUsers.map(async ({user}) => {
                     console.log(`Adding ${userAmount} for ${user.id} in custody`)
                     await addCustody(user.id, userAmount)
-                }));
+                })).then((e) => console.log("All custody users added"));
             }
 
             let txStatus = {
@@ -211,12 +211,15 @@ module.exports = {
                 txStatus.txs.set(txid, {daaScore: null, finalized: false});
             }
 
-            await interaction.editReply({content: "KAS transfer processed succesfully"});
-            let followUp = await interaction.followUp(statusToMessage(txStatus));
+            //await interaction.editReply({content: "KAS transfer processed succesfully"});
+            //let followUp = await interaction.followUp(statusToMessage(txStatus));
+            const followUpPromise = interaction.editReply({content: "KAS transfer processed succesfully"})
+                .then(async () => await interaction.followUp(statusToMessage(txStatus)));
 
             // Waiting for reports
             addBlockCallback(
                 async (block) => {
+                    const followUp = await followUpPromise;
                     let changed = false;
                     const daaScore = parseInt(block.header.daaScore);
                     for (let txid of block.verboseData.transactionIds) {
@@ -225,22 +228,38 @@ module.exports = {
                             changed = true;
                         }
                     }
-                    for (let [txid, {daaScore: txDaaScore, finalized}] of txStatus.txs) {
-                        if (txDaaScore !== null && !finalized && daaScore - txDaaScore > PENDING_SCORE_DIFF){
-                            txStatus.txs.set(txid, {daaScore: txDaaScore, finalized: true});
-                            changed = true;
-                        }
-                    }
 
+                    console.log(txStatus.txs);
                     if (changed) {
                         await interaction.webhook.editMessage(followUp, statusToMessage(txStatus));
                     }
-                    // If at least one tx is not final
-                    return !([...txStatus.txs.values()].map(
-                        (txDaaScore) => (txDaaScore !== null && daaScore-txDaaScore > PENDING_SCORE_DIFF)
-                    ).reduce((a,b) => a && b));
+                    // If at least one tx is doesn't have daaScore
+                    let res = ([...txStatus.txs.values()].map(({daaScore: txDaaScore}) => (txDaaScore === null)).reduce((a,b) => a || b));
+                    console.log(res);
+                    return res;
                 }
             );
+
+            addDaaScoreCallback(async (daaScore) => {
+                const followUp = await followUpPromise;
+                let changed = false;
+                daaScore = parseInt(daaScore);
+                for (let [txid, {daaScore: txDaaScore, finalized}] of txStatus.txs) {
+                    if (txDaaScore !== null && !finalized && daaScore - txDaaScore > PENDING_SCORE_DIFF){
+                        txStatus.txs.set(txid, {daaScore: txDaaScore, finalized: true});
+                        changed = true;
+                    }
+                }
+
+                console.log(txStatus.txs);
+                if (changed) {
+                    await interaction.webhook.editMessage(followUp, statusToMessage(txStatus));
+                }
+                // If at least one tx is not final
+                return [...txStatus.txs.values()].map(({finalized}) => !finalized).reduce((a,b) => a || b);
+            })
+
+            await followUpPromise;
         }
 
         if (!interaction.replied) {
