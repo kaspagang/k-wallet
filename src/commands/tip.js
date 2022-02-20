@@ -194,7 +194,7 @@ module.exports = {
 
         if (tx !== null && tx !== undefined) {
             if (custodyUsers.length > 0) {
-                Promise.all(custodyUsers.map(async ({user}) => {
+                await Promise.all(custodyUsers.map(async ({user}) => {
                     console.log(`Adding ${userAmount} for ${user.id} in custody`)
                     await addCustody(user.id, userAmount)
                 })).then((e) => console.log("All custody users added"));
@@ -211,15 +211,14 @@ module.exports = {
                 txStatus.txs.set(txid, {daaScore: null, finalized: false});
             }
 
-            //await interaction.editReply({content: "KAS transfer processed succesfully"});
-            //let followUp = await interaction.followUp(statusToMessage(txStatus));
-            const followUpPromise = interaction.editReply({content: "KAS transfer processed succesfully"})
-                .then(async () => await interaction.followUp(statusToMessage(txStatus)));
+            await interaction.editReply({content: "KAS transfer processed succesfully"});
+            let followUp = await interaction.followUp(statusToMessage(txStatus));
+            //const followUpPromise = interaction.editReply({content: "KAS transfer processed succesfully"})
+            //    .then(async () => await interaction.followUp(statusToMessage(txStatus)));
 
             // Waiting for reports
             addBlockCallback(
                 async (block) => {
-                    const followUp = await followUpPromise;
                     let changed = false;
                     const daaScore = parseInt(block.header.daaScore);
                     for (let txid of block.verboseData.transactionIds) {
@@ -238,7 +237,6 @@ module.exports = {
             );
 
             addDaaScoreCallback(async (daaScore) => {
-                const followUp = await followUpPromise;
                 let changed = false;
                 daaScore = parseInt(daaScore);
                 for (let [txid, {daaScore: txDaaScore, finalized}] of txStatus.txs) {
