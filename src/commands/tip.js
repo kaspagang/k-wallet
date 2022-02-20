@@ -253,7 +253,6 @@ module.exports = {
                 return [...txStatus.txs.values()].map(({finalized}) => !finalized).reduce((a,b) => a || b);
             })
 
-            await followUpPromise;
         }
 
         if (!interaction.replied) {
