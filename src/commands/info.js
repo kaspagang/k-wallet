@@ -40,10 +40,10 @@ module.exports = {
         }
         const tipAddress = info.forward? info.forwardAddress : info.publicAddress;
         let fields = [
-            { name: 'Wallet status', value: locked? ":unlock:" : ":lock:" },
-            { name: 'Tipper Public Address', value: `[${info.publicAddress}](${KATNIP_ADDR}${info.publicAddress})` },
+            { name: 'Wallet status', value: locked? ":unlock:" : ":lock:", inline: true },
             { name: 'Balance', value: balance, inline: true },
             { name: 'UTXO Count', value: utxoCount, inline: true },
+            { name: 'Tipper Public Address', value: `[${info.publicAddress}](${KATNIP_ADDR}${info.publicAddress})` },
             { name: 'Tip Destination', value: `[${tipAddress}](${KATNIP_ADDR}${tipAddress})` },
         ]
         if (showSecret && wallet !== null) {
