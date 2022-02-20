@@ -229,14 +229,11 @@ module.exports = {
                         }
                     }
 
-                    console.log(txStatus.txs);
                     if (changed) {
                         await interaction.webhook.editMessage(followUp, statusToMessage(txStatus));
                     }
                     // If at least one tx is doesn't have daaScore
-                    let res = ([...txStatus.txs.values()].map(({daaScore: txDaaScore}) => (txDaaScore === null)).reduce((a,b) => a || b));
-                    console.log(res);
-                    return res;
+                    return ([...txStatus.txs.values()].map(({daaScore: txDaaScore}) => (txDaaScore === null)).reduce((a,b) => a || b));
                 }
             );
 
@@ -251,7 +248,6 @@ module.exports = {
                     }
                 }
 
-                console.log(txStatus.txs);
                 if (changed) {
                     await interaction.webhook.editMessage(followUp, statusToMessage(txStatus));
                 }
