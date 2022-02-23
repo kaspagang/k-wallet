@@ -1,4 +1,4 @@
-const config = require("config");
+const config = require("../config");
 const { Wallet, initKaspaFramework } = require('@kaspa/wallet');
 const { RPC } = require('@kaspa/grpc-node');
 const Keyv = require('keyv');

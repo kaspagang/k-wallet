@@ -1,4 +1,4 @@
-const config = require("config");
+const config = require("../config");
 if (config.enableFaucet) {
     const {userStore} = require("../lib/users");
 

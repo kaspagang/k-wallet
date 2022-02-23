@@ -1,4 +1,4 @@
-const config = require("config");
+const config = require("../config");
 const { updateUser, lockWallet, userStore} = require("../lib/users");
 const {MessageEmbed, MessageActionRow, MessageButton} = require("discord.js");
 

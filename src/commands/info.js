@@ -1,4 +1,4 @@
-const config = require("config");
+const config = require("../config");
 const { MessageEmbed } = require('discord.js');
 const { userStore, unlockWallet, getRPCBalance, getNodeStatus } = require("../lib/users");
 const { KAS_TO_SOMPIS, KATNIP_ADDR } = require("../constants");
