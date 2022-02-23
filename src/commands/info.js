@@ -1,3 +1,4 @@
+const config = require("config");
 const { MessageEmbed } = require('discord.js');
 const { userStore, unlockWallet, getRPCBalance, getNodeStatus } = require("../lib/users");
 const { KAS_TO_SOMPIS, KATNIP_ADDR } = require("../constants");
@@ -38,22 +39,24 @@ module.exports = {
             }
             locked = false;
         }
-        const tipAddress = info.forward? info.forwardAddress : info.publicAddress;
-        
+
         let fields = [
             { name: 'Wallet status', value: locked? ":unlock:" : ":lock:", inline: true },
             { name: 'Balance', value: balance, inline: true },
             { name: 'UTXO Count', value: utxoCount, inline: true },
             { name: 'Tipper Public Address', value: `[${info.publicAddress}](${KATNIP_ADDR}${info.publicAddress})` },
-            { name: 'Tip Destination', value: `[${tipAddress}](${KATNIP_ADDR}${tipAddress})` }
-        ]      
+        ]
+        if (config.enableAutoForward) {
+            const tipAddress = info.forward? info.forwardAddress : info.publicAddress;
+            fields.push({ name: 'Tip Destination', value: `[${tipAddress}](${KATNIP_ADDR}${tipAddress})` })
+        }
         if (info.forwardAddress) {
             fields.push(
-                { name: 'Forward Address', value: `[${info.forwardAddress}](${KATNIP_ADDR}${info.forwardAddress})`},
+                { name: 'Withdraw Address', value: `[${info.forwardAddress}](${KATNIP_ADDR}${info.forwardAddress})`},
             )
         } else {
             fields.push(
-                { name: 'Forward Address', value: ':no_entry_sign:'},
+                { name: 'Withdraw Address', value: ':no_entry_sign:'},
             )
         }
         if (showSecret && wallet !== null) {

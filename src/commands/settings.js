@@ -1,3 +1,4 @@
+const config = require("config");
 const { updateUser, lockWallet, userStore} = require("../lib/users");
 const {MessageEmbed, MessageActionRow, MessageButton} = require("discord.js");
 
@@ -6,19 +7,28 @@ const BUTTON_TIMEOUT = 5000;
 module.exports = {
     name: "settings",
     short: false,
-    builder: (namedCommand) => namedCommand.setDescription('Set and get the settings for the discord wallet').addStringOption(
-        option => option.setName('secret').setDescription("Set or change wallet password (require unlock first)")
-    ).addStringOption(
-        option => option.setName('forward-address').setDescription("Address for tip forwarding")
-    ).addBooleanOption(
-        option => option.setName('auto-forward').setDescription("Forward all tips directly to another address")
-    ).addIntegerOption(
-        option => option.setName('unlock-timeout').setDescription("How long to keeps keys in memory")
-    ),
+    builder: (namedCommand) => {
+        let command = namedCommand.setDescription('Set and get the settings for the discord wallet').addStringOption(
+            option => option.setName('secret').setDescription("Set or change wallet password (require unlock first)")
+        ).addStringOption(
+            option => option.setName('withdraw-address').setDescription("Address for withdrawing funds quickly")
+        ).addIntegerOption(
+            option => option.setName('unlock-timeout').setDescription("How long to keeps keys in memory")
+        )
+        if (config.enableAutoForward) {
+            command.addBooleanOption(
+                option => option.setName('auto-withdraw').setDescription("Forward all tips directly to the withdraw address")
+            )
+        }
+        return command
+    },
     async execute(interaction) {
         let secret = interaction.options.getString("secret");
-        let address = interaction.options.getString("forward-address");
-        let forward = interaction.options.getBoolean("auto-forward");
+        let address = interaction.options.getString("withdraw-address");
+        let forward = null;
+        if (config.enableAutoForward) {
+            forward = interaction.options.getBoolean("auto-withdraw");
+        }
         let unlockTimeout = interaction.options.getInteger("unlock-timeout");
         let result = await updateUser(interaction.user.id, secret, address, forward, unlockTimeout).catch(async (e) => {
             await interaction.reply({content: `:warning: *Failed changing settings:*\n> ${e.message}`, ephemeral: true});
@@ -34,10 +44,12 @@ module.exports = {
                 );
 
             const fields = [
-                { name: 'Forward Address', value: result.forwardAddress ?  result.forwardAddress : "*Not set*"},
-                { name: 'Auto Forward', value: result.forward? ":arrow_up: Yes" : ':no_entry: No', inline: true},
+                { name: 'Withdraw Address', value: result.forwardAddress ?  result.forwardAddress : "*Not set*"},
                 { name: 'Unlock Timeout', value: `${(result.unlockTimeout / 60000).toFixed(2)} Minutes`, inline: true},
             ];
+            if (config.enableAutoForward) {
+                fields.push({ name: 'Auto Forward', value: result.forward? ":arrow_up: Yes" : ':no_entry: No', inline: true});
+            }
             await interaction.reply({
                 embeds: [
                     new MessageEmbed()

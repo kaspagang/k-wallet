@@ -30,16 +30,9 @@ for (const file of commandFiles) {
 const rest = new REST({ version: '9' }).setToken(process.env.DISCORD_BOT_TOKEN);
 
 rest.put(
-    Routes.applicationGuildCommands(process.env.DISCORD_CLIENT_ID, process.env.DISCORD_GUILD_ID),
-    //Routes.applicationCommands(process.env.DISCORD_CLIENT_ID), // for production
-    { body: [mainCommand.toJSON(), ...commands] }
-).then(
-    () => console.log('Successfully registered application commands.')
-).catch(console.error);
-
-rest.put(
+    //Routes.applicationGuildCommands(process.env.DISCORD_CLIENT_ID, process.env.DISCORD_GUILD_ID),
     Routes.applicationCommands(process.env.DISCORD_CLIENT_ID), // for production
     { body: [mainCommand.toJSON(), ...commands] }
 ).then(
     () => console.log('Successfully registered application commands.')
-).catch(console.error);
+).catch(console.error)

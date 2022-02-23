@@ -11,7 +11,7 @@ module.exports = {
     builder: (namedCommand) => namedCommand.setDescription('Withdraw KAS').addNumberOption(
         option => option.setName("amount").setDescription("Amount of KAS to Withdraw").setRequired(true).setAutocomplete(true)
     ).addStringOption(
-        option => option.setName("address").setDescription("Destination address for the withdrawel (default: forward-address specified in `settings`)").setRequired(true).setAutocomplete(true)
+        option => option.setName("address").setDescription("Destination address for the withdrawel (default: withdraw-address specified in `settings`)").setRequired(true).setAutocomplete(true)
     ),
     
     async autocomplete(interaction) {

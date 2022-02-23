@@ -1,3 +1,4 @@
+const config = require("config");
 const { Wallet, initKaspaFramework } = require('@kaspa/wallet');
 const { RPC } = require('@kaspa/grpc-node');
 const Keyv = require('keyv');
@@ -152,7 +153,7 @@ const getAddress = async (user) => {
     let userInfo = await userStore.get(user);
     if (userInfo === undefined){
         return null;
-    } else if (userInfo.forward && userInfo.forwardAddress !== "") {
+    } else if (config.enableAutoForward && userInfo.forward && userInfo.forwardAddress !== "") {
         return userInfo.forwardAddress
     }
     return userInfo.publicAddress
@@ -181,7 +182,7 @@ const updateUser = async (user, password, address, forward, unlockTimeout) => {
             mnemonic: await wallet.export(password),
             publicAddress: wallet.receiveAddress,
             forwardAddress: address,
-            forward: forward,
+            forward: config.enableAutoForward && forward,
             unlockTimeout: unlockTimeout,
         };
         openWallets.set(user, {
@@ -205,7 +206,7 @@ const updateUser = async (user, password, address, forward, unlockTimeout) => {
             userInfo.forwardAddress = address;
         }
         if (forward !== null && forward !== undefined) {
-            userInfo.forward = forward;
+            userInfo.forward = config.enableAutoForward && forward;
         }
         if (unlockTimeout !== null && unlockTimeout !== undefined){
             userInfo.unlockTimeout = unlockTimeout;

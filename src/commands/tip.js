@@ -1,3 +1,4 @@
+const config = require("config");
 const { MessageMentions: { USERS_PATTERN, ROLES_PATTERN, EVERYONE_PATTERN } } = require('discord.js');
 const { unlockWallet, userStore, getCustodialAddress, addCustody, getRPCBalance, addBlockCallback, addDaaScoreCallback} = require("../lib/users");
 const {User, GuildMember, Role, Message} = require("discord.js");
@@ -168,7 +169,7 @@ module.exports = {
 
         const targets = nonCustodyUsers.map(({userInfo}) => {
             let address = userInfo.publicAddress
-            if (userInfo.forward && userInfo.forwardAddress !== "") {
+            if (config.enableAutoForward && userInfo.forward && userInfo.forwardAddress !== "") {
                 address = userInfo.forwardAddress;
             }
             return {address, amount: Math.floor(userAmount * KAS_TO_SOMPIS)}
@@ -256,7 +257,7 @@ module.exports = {
         }
 
         if (!interaction.replied) {
-            interaction.editReply({content: ":ambulance: Processing finished, but not reply was sent."})
+            await interaction.editReply({content: ":ambulance: Processing finished, but not reply was sent."})
         }
     },
 }
