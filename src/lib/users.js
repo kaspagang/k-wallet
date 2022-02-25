@@ -89,10 +89,11 @@ const addCustody = async (user, amount) => {
 
 const checkCustody = async (user) => {
     let custodial = await custodyStore.get(user);
+    let address = await getAddress(user);
     if (custodial !== undefined){
-        console.log(`Giving away ${custodial} KAS from custody`);
+        console.log(`Giving away ${custodial} KAS from custody to ${user} (${address})`);
         let res = await custodialWallet.wallet.submitTransaction({
-            targets: [{address: await getAddress(user), amount: Math.floor(custodial*KAS_TO_SOMPIS)}],
+            targets: [{address, amount: Math.floor(custodial*KAS_TO_SOMPIS)}],
             changeAddrOverride: custodialWallet.publicAddress,
             calculateNetworkFee: true,
             inclusiveFee: true
@@ -109,7 +110,6 @@ const checkCustody = async (user) => {
 }
 
 const unlockWallet = async (user, password) => {
-    checkCustody(user).then(() => console.log("Successfully ran checkCustody"));
     if (openWallets.has(user)) {
         let opened = openWallets.get(user);
         // TODO: bug workaround
@@ -138,6 +138,7 @@ const unlockWallet = async (user, password) => {
         lastAccess: Date.now(),
         timeout: userInfo.unlockTimeout
     });
+    checkCustody(user).then(() => console.log("Successfully ran checkCustody"));
     return wallet;
 }
 
@@ -217,5 +218,5 @@ const updateUser = async (user, password, address, forward, unlockTimeout) => {
 }
 
 module.exports = {
-    getRPCBalance, userStore, walletInit, unlockWallet, lockWallet, getAddress, updateUser, getCustodialAddress, addCustody, addBlockCallback, addDaaScoreCallback
+    getRPCBalance, userStore, walletInit, unlockWallet, lockWallet, getAddress, updateUser, getCustodialAddress, addCustody, addBlockCallback, addDaaScoreCallback, checkCustody
 }
