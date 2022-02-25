@@ -198,6 +198,15 @@ module.exports = {
                 await Promise.all(custodyUsers.map(async ({user}) => {
                     console.log(`Adding ${userAmount} for ${user.id} in custody`)
                     await addCustody(user.id, userAmount)
+                    if (totalUsers === 1) {
+                        await user.send(
+                            `Hi! I am Kaspa wallet bot. Someone just tipped you ${userAmount} KAS using me `+
+                            `(you should find a message regarding this in your mentions).\nTo open a wallet and receive the KAS, `+
+                            `type \`/kwallet unlock\` and set a password.\nYour mnemonic will be saved encrypted on the ` +
+                            `server. To display you mnemonic, type \`/kwallet info show-secret:True\`.\n\nSource code ` +
+                            `available at https://github.com/kaspagang/k-wallet. Non-slash commands will be ignored.`
+                        )
+                    }
                 })).then((e) => console.log("All custody users added"));
             }
 
