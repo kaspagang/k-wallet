@@ -40,7 +40,7 @@ async function getMentions(interaction, mention) {
         mentions.push(interaction.guild.roles.cache.get(interaction.guild.id));
     }
 
-    return {mentions, tags: tags.reduce((a,b) => a+ " "+b)};
+    return {mentions, tags: tags.reduce((a,b) => a+ " "+b, "")};
 }
 
 
@@ -116,7 +116,13 @@ module.exports = {
         let allowHold = interaction.options.getBoolean("allow-hold")
         let inclusiveFee = interaction.options.getBoolean("inclusive-fee")
         inclusiveFee = inclusiveFee === null? false : inclusiveFee;
-        let who = await getMentions(interaction, interaction.options.getString("who"));
+        const whoString = interaction.options.getString("who");
+        let who = await getMentions(interaction, whoString);
+
+        if (who.mentions.length === 0) {
+            interaction.reply({content: ":thinking: *Sorry, I did not understand who you wanted to address. Can you try again?*", ephemeral: true});
+            return;
+        }
 
         let users = new Map();
         for (let member of who.mentions) {
