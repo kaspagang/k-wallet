@@ -12,7 +12,7 @@ function statusToMessage({from, to, amount, txs, message}) {
     let txLinks = [...txs.entries()].map(([txid, {daaScore: txDaaScore, finalized}], i) => (
         (i === (txs.length - 1) && i > 0)? "and " : "") +
         `[here](${KATNIP_TX}${txid})` +
-        (txDaaScore !== null? finalized? " :heavy_check_mark: " : " :hourglass:" : "")
+        (txDaaScore !== null? finalized? " :ballot_box_with_check:" : " :hourglass:" : "")
     ).reduce((a,b) => a + ", " + b)
     return `:moneybag: ${from} sent ${amount} KAS to ${to} (${txLinks})` +
     (message ? `\n> ${message}` : "")
