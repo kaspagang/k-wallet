@@ -1,4 +1,4 @@
-const { unlockWallet} = require("../lib/users");
+const {unlockWallet, checkUser} = require("../lib/users");
 
 module.exports = {
     name: "unlock",
@@ -8,9 +8,13 @@ module.exports = {
     ),
     async execute(interaction) {
         let secret = interaction.options.getString("secret");
+        let regUser = await checkUser(interaction.user.id);
         try {
             let wallet = await unlockWallet(interaction.user.id, secret);
             await interaction.reply({content:":unlock: *Wallet unlock successfully!*", ephemeral: true});
+            if (regUser === false) {
+                await user.send({content:`:key: This is your memonic: ||${wallet.mnemonic}|| please keep it safe`});
+            }
         } catch {
             await interaction.reply({content:":warning: *Failed to unlock wallet. Try a different password*", ephemeral: true});
         }

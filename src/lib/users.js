@@ -36,6 +36,15 @@ const getRPCBalance = async (address) => {
     return {balance, utxoCount: res.entries.length, error: null};
 }
 
+const checkUser = async (user) => {
+    userInfo = await userStore.get(user)
+    if (userInfo === undefined){
+        return false;
+    } else {
+        return true;
+    }
+}
+
 const walletInit = async (address, custodialMnemonic) => {
     rpc = new RPC({ clientConfig: { host: address + ":" + port }})
     await initKaspaFramework();
@@ -218,5 +227,5 @@ const updateUser = async (user, password, address, forward, unlockTimeout) => {
 }
 
 module.exports = {
-    getRPCBalance, userStore, walletInit, unlockWallet, lockWallet, getAddress, updateUser, getCustodialAddress, addCustody, addBlockCallback, addDaaScoreCallback, checkCustody
+    getRPCBalance, userStore, checkUser, walletInit, unlockWallet, lockWallet, getAddress, updateUser, getCustodialAddress, addCustody, addBlockCallback, addDaaScoreCallback, checkCustody
 }
