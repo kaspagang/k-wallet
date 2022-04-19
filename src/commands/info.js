@@ -21,12 +21,12 @@ module.exports = {
         let wallet = await unlockWallet(interaction.user.id);
         let balance = ":tools: Failed to calculate.";
         let utxoCount = ":tools: Failed to calculate.";
-        let mnemonic = ""
+        let mnemonic = ":lock: *Wallet is locked*"
         if (wallet !== null) {
             balance = `${wallet.balance.available / KAS_TO_SOMPIS} KAS (${wallet.balance.pending / KAS_TO_SOMPIS} Pending)`;
             utxoCount = `${wallet.utxoSet.utxos.confirmed.size} (${wallet.utxoSet.utxos.pending.size} Pending)`
             if (showSecret) {
-                mnemonic = `**Mnemonic**: ${wallet.mnemonic}`
+                mnemonic = wallet.mnemonic
             }
         } else {
             let res = await getRPCBalance(info.publicAddress);
@@ -59,10 +59,8 @@ module.exports = {
                 { name: 'Withdraw Address', value: ':no_entry_sign:'},
             )
         }
-        if (showSecret && wallet !== null) {
-            fields.push(
-                { name: 'Mnemonic', value: wallet.mnemonic },
-            )
+        if (showSecret) {
+            fields.push({name: 'Mnemonic', value: mnemonic},)
         }
         // TODO: get balance by public key
         let preabmle = "";

@@ -211,7 +211,14 @@ module.exports = {
                             `type \`/kwallet unlock\` and set a password.\nYour mnemonic will be saved encrypted on the ` +
                             `server. To display you mnemonic, type \`/kwallet info show-secret:True\`.\n\nSource code ` +
                             `available at https://github.com/kaspagang/k-wallet. Non-slash commands will be ignored.`
-                        )
+                        ).catch((e) => {
+                            console.log(`User ${user.id} has DM disabled`)
+                            interaction.followUp({
+                                content: `${who.tags} does not have a wallet, and I could not send a message to them. `+
+                                    `Please make sure they open a wallet to get their tip.`,
+                                ephemeral: true
+                            })
+                        })
                     }
                 })).then((e) => console.log("All custody users added"));
             }

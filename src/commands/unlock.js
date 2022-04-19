@@ -1,4 +1,5 @@
 const {unlockWallet, checkUser} = require("../lib/users");
+const { MessageActionRow, MessageButton } = require('discord.js');
 
 module.exports = {
     name: "unlock",
@@ -13,22 +14,25 @@ module.exports = {
     async execute(interaction) {
         let secret = interaction.options.getString("secret");
         let regUser = await checkUser(interaction.user.id);
+        let wallet = null;
         try {
-            let wallet = await unlockWallet(interaction.user.id, secret);
+            wallet = await unlockWallet(interaction.user.id, secret);
             await interaction.reply({content:":unlock: *Wallet unlock successfully!*", ephemeral: true});
-            if (!regUser) {
-                const button = new MessageActionRow()
-                    .addComponents(
-                        new MessageButton()
-                            .setCustomId('deleteMsg')
-                            .setLabel('Delete message')
-                            .setStyle('DANGER')
-                            .setDisabled(false),
-                    );
-                await interaction.user.send({content:`:key: This is your memonic: ||${wallet.mnemonic}|| please keep it safe`, components: [button]});
-            }
         } catch {
             await interaction.reply({content:":warning: *Failed to unlock wallet. Try a different password*", ephemeral: true});
+        }
+        if (wallet !==null && !regUser) {
+            const button = new MessageActionRow()
+                .addComponents(
+                    new MessageButton()
+                        .setCustomId('deleteMsg')
+                        .setLabel('Delete message')
+                        .setStyle('DANGER')
+                        .setDisabled(false),
+                );
+            await interaction.user.send({content:`:key: This is your mnemonic: ||${wallet.mnemonic}|| please keep it safe`, components: [button]}).catch(async (e) => {
+                await interaction.followUp({ content: ':warning: You should backup your mnemonic phrase. You can view it with `/kwallet info show-secret:True`.', ephemeral: true })
+            });
         }
     },
     async onButton(interaction) {
