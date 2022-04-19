@@ -1,4 +1,4 @@
-const { unlockWallet, userStore} = require("../lib/users");
+const { unlockWallet, userStore, getRPCBalance } = require("../lib/users");
 const {User, GuildMember, Role} = require("discord.js");
 
 const KAS_TO_SOMPIS = 100000000;
