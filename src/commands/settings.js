@@ -37,7 +37,7 @@ module.exports = {
             const row = new MessageActionRow()
                 .addComponents(
                     new MessageButton()
-                        .setCustomId('delete')
+                        .setCustomId('delete_wallet')
                         .setLabel('Delete Wallet')
                         .setStyle('DANGER')
                         //.setDisabled(true),
@@ -65,12 +65,12 @@ module.exports = {
         }
     },
     async onButton(interaction) {
-        if (interaction.customId === 'delete') {
+        if (interaction.customId === 'delete_wallet') {
             if (interaction.createdAt - interaction.message.createdAt > BUTTON_TIMEOUT) {
                 const row = new MessageActionRow()
                     .addComponents(
                         new MessageButton()
-                            .setCustomId('delete')
+                            .setCustomId('delete_wallet')
                             .setLabel('Delete Wallet')
                             .setStyle('DANGER')
                             .setDisabled(true),
@@ -81,18 +81,18 @@ module.exports = {
             const row = new MessageActionRow()
                 .addComponents(
                     new MessageButton()
-                        .setCustomId('delete_approved')
+                        .setCustomId('delete_wallet_approved')
                         .setLabel('Approve')
                         .setStyle('DANGER')
                     //.setDisabled(true),
                 );
             interaction.update({ content: ":warning:  **YOU WILL LOSE ACCESS TO YOUR DISCORD WALLET AND ALL FUNDS. ALL SETTINGS WILL BE RESET. :warning:  This action cannot be undone**.\nDismiss message to cancel. Click approve to continue", embeds: [], components: [row] });
-        } else if (interaction.customId === 'delete_approved') {
+        } else if (interaction.customId === 'delete_wallet_approved') {
             if (interaction.createdAt - interaction.message.createdAt > BUTTON_TIMEOUT) {
                 const row = new MessageActionRow()
                     .addComponents(
                         new MessageButton()
-                            .setCustomId('delete_approved')
+                            .setCustomId('delete_wallet_approved')
                             .setLabel('Approve')
                             .setStyle('DANGER')
                             .setDisabled(true),

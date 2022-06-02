@@ -169,7 +169,7 @@ const getAddress = async (user) => {
     return userInfo.publicAddress
 }
 
-const updateUser = async (user, password, address, forward, unlockTimeout) => {
+const updateUser = async (user, password, address, forward, unlockTimeout, mnemonics=null) => {
     //wallet = new Wallet(null, null, {network, rpc}, {disableAddressDerivation: true});
     let userInfo = await userStore.get(user);
     if (userInfo === undefined) {
@@ -185,7 +185,12 @@ const updateUser = async (user, password, address, forward, unlockTimeout) => {
         if (unlockTimeout === null || unlockTimeout === undefined) {
             unlockTimeout = UNLOCK_TIMEOUT;
         }
-        let wallet = new Wallet(null, null, {network, rpc}, {disableAddressDerivation: true, syncOnce: true});
+        let wallet = null;
+        if (mnemonics === null) {
+            wallet = new Wallet(null, null, {network, rpc}, {disableAddressDerivation: true, syncOnce: true});
+        } else {
+            wallet = Wallet.fromMnemonic(mnemonics, {network, rpc}, {disableAddressDerivation: true, syncOnce: true});
+        }
         await wallet.sync(true); // Duplicate to mitigate wallet bug
         await wallet.sync(true);
         userInfo = {
@@ -227,5 +232,5 @@ const updateUser = async (user, password, address, forward, unlockTimeout) => {
 }
 
 module.exports = {
-    getRPCBalance, userStore, checkUser, walletInit, unlockWallet, lockWallet, getAddress, updateUser, getCustodialAddress, addCustody, addBlockCallback, addDaaScoreCallback, checkCustody
+    getRPCBalance, userStore, checkUser, walletInit, unlockWallet, lockWallet, getAddress, updateUser, getCustodialAddress, addCustody, addBlockCallback, addDaaScoreCallback, checkCustody, UNLOCK_TIMEOUT
 }

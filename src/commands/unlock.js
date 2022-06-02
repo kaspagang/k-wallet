@@ -25,7 +25,7 @@ module.exports = {
             const button = new MessageActionRow()
                 .addComponents(
                     new MessageButton()
-                        .setCustomId('deleteMsg')
+                        .setCustomId('delete_mnemonics')
                         .setLabel('Delete message')
                         .setStyle('DANGER')
                         .setDisabled(false),
@@ -36,6 +36,8 @@ module.exports = {
         }
     },
     async onButton(interaction) {
-        await interaction.message.delete();
+        if (interaction.customId === 'delete_mnemonics') {
+            await interaction.message.delete();
+        }
     },
 }

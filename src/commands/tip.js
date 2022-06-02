@@ -14,7 +14,7 @@ function statusToMessage({from, to, amount, txs, message}) {
         `[here](${KATNIP_TX}${txid})` +
         (txDaaScore !== null? finalized? " :ballot_box_with_check:" : " :hourglass:" : "")
     ).reduce((a,b) => a + ", " + b)
-    return `:moneybag: ${from} sent ${amount} KAS to ${to} (${txLinks})` +
+    return `:moneybag: ${from} sent ${amount} <:kas:979006282734387210> to ${to} (${txLinks})` +
     (message ? `\n> ${message}` : "")
 }
 
@@ -204,7 +204,7 @@ module.exports = {
                 await Promise.all(custodyUsers.map(async ({user}) => {
                     console.log(`Adding ${userAmount} for ${user.id} in custody`)
                     await addCustody(user.id, userAmount)
-                    if (totalUsers === 1) {
+                    if (totalUsers <= 5) {
                         await user.send(
                             `Hi! I am Kaspa wallet bot. Someone just tipped you ${userAmount} KAS using me `+
                             `(you should find a message regarding this in your mentions).\nTo open a wallet and receive the KAS, `+
