@@ -191,11 +191,13 @@ const updateUser = async (user, password, address, forward, unlockTimeout, mnemo
         } else {
             wallet = Wallet.fromMnemonic(mnemonics, {network, rpc}, {disableAddressDerivation: true, syncOnce: true});
         }
+        // We have to read address before syncing, so we get the first address
+        let w_address = wallet.receiveAddress;
         await wallet.sync(true); // Duplicate to mitigate wallet bug
         await wallet.sync(true);
         userInfo = {
             mnemonic: await wallet.export(password),
-            publicAddress: wallet.receiveAddress,
+            publicAddress: w_address,
             forwardAddress: address,
             forward: config.enableAutoForward && forward,
             unlockTimeout: unlockTimeout,

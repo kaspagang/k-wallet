@@ -2,7 +2,7 @@ const config = require("../config");
 const { updateUser, lockWallet, userStore} = require("../lib/users");
 const {MessageEmbed, MessageActionRow, MessageButton} = require("discord.js");
 
-const BUTTON_TIMEOUT = 5000;
+const BUTTON_TIMEOUT = 10000;
 
 module.exports = {
     name: "settings",
