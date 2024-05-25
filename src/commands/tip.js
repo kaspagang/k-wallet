@@ -173,11 +173,11 @@ module.exports = {
 
         const userAmount = amount/totalUsers;
 	if ( totalUsers > 1 && userAmount < config.minAllowedMulticast ) {
-		await interaction.followUp({
-			content: `:no_entry_sign: *Outputs under 1 KAS are not allowed for multiple targets`,
-			ephemeral: true
-		});
-		return;
+	    await interaction.followUp({
+                content: `:no_entry_sign:  *Outputs under 1 KAS are not allowed for multiple targets*`,
+	        ephemeral: true
+	    });
+	    return;
 	}
 
         const targets = nonCustodyUsers.map(({userInfo}) => {

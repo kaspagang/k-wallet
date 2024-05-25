@@ -140,7 +140,8 @@ const unlockWallet = async (user, password) => {
     }
     let wallet = await Wallet.import(password, userInfo.mnemonic, {network, rpc}, {disableAddressDerivation: true, syncOnce: true});
     if (wallet.receiveAddress !== userInfo["publicAddress"]) {
-        console.log(`ERROR: user ${user} has real address ${wallet.receiveAddress} and registered address ${userInfo["publicAddress"]}`)
+        console.log(`ERROR: user ${user} has real address ${wallet.receiveAddress} and registered
+ address ${userInfo["publicAddress"]}`);
     }
     await wallet.sync(true);
     await wallet.sync(true);
