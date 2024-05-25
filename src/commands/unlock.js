@@ -40,7 +40,7 @@ module.exports = {
             // We have to refresh cache on interactions
             const channel = await interaction.client.channels.fetch(interaction.channelId);
             const message = await channel.messages.fetch(interaction.message.id);
-            await message.delete()
+            await message.delete();
         }
     },
 }

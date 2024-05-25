@@ -11,7 +11,7 @@ const PENDING_SCORE_DIFF = 100;
 function statusToMessage({from, to, amount, txs, message}) {
     let txLinks = [...txs.entries()].map(([txid, {daaScore: txDaaScore, finalized}], i) => (
         (i === (txs.length - 1) && i > 0)? "and " : "") +
-        `[here](${KATNIP_TX}${txid})` +
+        `[here](<${KATNIP_TX}${txid}>)` +
         (txDaaScore !== null? finalized? " :ballot_box_with_check:" : " :hourglass:" : "")
     ).reduce((a,b) => a + ", " + b)
     return `:moneybag: ${from} sent ${amount} <:kas:979006282734387210> to ${to} (${txLinks})` +
@@ -172,6 +172,13 @@ module.exports = {
         let changeAddress = (await userStore.get(interaction.user.id)).publicAddress;
 
         const userAmount = amount/totalUsers;
+	if ( totalUsers > 1 && userAmount < config.minAllowedMulticast ) {
+		await interaction.followUp({
+			content: `:no_entry_sign: *Outputs under 1 KAS are not allowed for multiple targets`,
+			ephemeral: true
+		});
+		return;
+	}
 
         const targets = nonCustodyUsers.map(({userInfo}) => {
             let address = userInfo.publicAddress

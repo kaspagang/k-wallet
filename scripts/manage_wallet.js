@@ -40,7 +40,7 @@ async function main() {
         wallet = await Wallet.import(password, userInfo.mnemonic, {
           network,
           rpc
-        }, {disableAddressDerivation: true, syncOnce: true});
+        }, {disableAddressDerivation: false, syncOnce: true});
       } catch (err) {
         console.log("Failed opening wallet. Try a different password")
         rpc.disconnect();

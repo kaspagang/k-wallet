@@ -139,6 +139,9 @@ const unlockWallet = async (user, password) => {
         userInfo = await updateUser(user, password, "", false, UNLOCK_TIMEOUT);
     }
     let wallet = await Wallet.import(password, userInfo.mnemonic, {network, rpc}, {disableAddressDerivation: true, syncOnce: true});
+    if (wallet.receiveAddress !== userInfo["publicAddress"]) {
+        console.log(`ERROR: user ${user} has real address ${wallet.receiveAddress} and registered address ${userInfo["publicAddress"]}`)
+    }
     await wallet.sync(true);
     await wallet.sync(true);
 
@@ -191,7 +194,6 @@ const updateUser = async (user, password, address, forward, unlockTimeout, mnemo
         } else {
             wallet = Wallet.fromMnemonic(mnemonics, {network, rpc}, {disableAddressDerivation: true, syncOnce: true});
         }
-        // We have to read address before syncing, so we get the first address
         let w_address = wallet.receiveAddress;
         await wallet.sync(true); // Duplicate to mitigate wallet bug
         await wallet.sync(true);
