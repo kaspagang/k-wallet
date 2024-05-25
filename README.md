@@ -2,6 +2,21 @@ Kaspa Discord Wallet Bot
 
 ## Run
 
+### Docker
+
+Build the docker image
+
+```shell 
+docker build . --tag k-wallet
+```
+
+Create a `.env` file as described in [#Settings], and run the docker
+```shell
+docker run --env-file .env k-wallet 
+```
+
+### Locally
+
 Clone the `multipe_targets` branch of [tmrlvi/kaspa-wallet](https://github.com/tmrlvi/kaspa-wallet/tree/multiple_targets)
 into the parent directory of this repository. Then run,
 
