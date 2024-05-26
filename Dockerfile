@@ -12,9 +12,9 @@ WORKDIR /app/kaspa-wallet
 RUN npm install
 RUN npx tsc
 
-WORKDIR /app
-RUN git clone https://github.com/kaspagang/k-wallet.git
-
+RUN mkdir /app/k-wallet/
 WORKDIR /app/k-wallet
+COPY --chown=k-wallet:k-wallet . .
+
 RUN npm install
 CMD ["npm", "run", "start"]

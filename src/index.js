@@ -1,6 +1,6 @@
+const config = require("./config")
 const fs = require('fs');
 const { Client, Collection, Intents } = require('discord.js');
-const dotenv = require('dotenv');
 const {walletInit} = require("./lib/users");
 
 const log = console.log;
@@ -8,8 +8,6 @@ const log = console.log;
 console.log = function() {
   log.apply(console, [new Date(), ...arguments]);
 }
-
-dotenv.config();
 
 const client = new Client({intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MEMBERS]});
 
@@ -31,7 +29,7 @@ for (const file of commandFiles) {
 }
 
 client.on("ready", (client) => {
-  walletInit(process.env.KASPAD_ADDRESS, process.env.CUSTODIAL);
+  walletInit(config.kaspad_address, config.custodial);
 });
 client.on('interactionCreate', async interaction => {
   if (!interaction.isCommand() && !interaction.isAutocomplete()) return;
@@ -43,7 +41,8 @@ client.on('interactionCreate', async interaction => {
 
   if (!command) return;
 
-  if (process.env.OFFLINE === "yes" || (process.env.OFFLINE === "admin" && process.env.ADMIN !== interaction.user.id)) {
+  //TODO: check if this isn't dangerous
+  if (config.offline === "yes" || (config.offline === "admin" && config.admin !== interaction.user.id)) {
     await interaction.reply({
       content: ':thunder_cloud_rain: *Bot is down for node maintenance. Please try again later*',
       ephemeral: true
@@ -100,4 +99,4 @@ client.on("debug", (info) => console.log(`Discord.js DEBUG: ${info}`));
 client.on("warn", (info) => console.log(`Discord.js WARN: ${info}`));
 client.on("error", (info) => console.log(`Discord.js ERROR: ${info}`));
 
-client.login(process.env.DISCORD_BOT_TOKEN);
+client.login(config.discord_token);
