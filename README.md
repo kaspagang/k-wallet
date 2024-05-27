@@ -37,6 +37,7 @@ The file is of the following structure:
 ```json
 {
     "kaspad_address": <kaspad address>,
+    "network": <"kaspa" | "kaspatest" | "kaspadev" - determines the key derivation and default port>
     "custodial": <mnemonics for the custodial wallet>,
 
     "storeType": <"firestore" or "keyv" (direct control)>,

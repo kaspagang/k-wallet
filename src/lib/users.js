@@ -14,7 +14,7 @@ const openWallets = new Map();
 let awaitingBlockCallbacks = [];
 let awaitingDaaScoreCallbacks = []
 
-const network = "kaspa";
+const network = config.network;
 const { port } = Wallet.networkTypes[network];
 let rpc = null;
 const custodialWallet = {publicAddress: null, wallet: null};
@@ -45,7 +45,7 @@ const checkUser = async (user) => {
 }
 
 const walletInit = async (address, custodialMnemonic) => {
-    rpc = new RPC({ clientConfig: { host: address + ":" + port }})
+    rpc = new RPC({ clientConfig: { host: address.includes(":") ? address : address + ":" + port }})
     await initKaspaFramework();
 
     custodialWallet.wallet = Wallet.fromMnemonic(custodialMnemonic, {network, rpc}, {disableAddressDerivation: true, syncOnce: false});
