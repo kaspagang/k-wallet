@@ -1,7 +1,7 @@
 const config = require("../config");
+const store = require("./store");
 const { Wallet, initKaspaFramework } = require('@kaspa/wallet');
 const { RPC } = require('@kaspa/grpc-node');
-const Keyv = require('keyv');
 const {KAS_TO_SOMPIS} = require("../constants");
 
 const walletModule = require.cache[require.resolve('@kaspa/wallet')];
@@ -9,8 +9,7 @@ const {Address} = walletModule.require('@kaspa/core-lib')
 
 const UNLOCK_TIMEOUT = 600000;
 
-const userStore = new Keyv('sqlite://users.db');
-const custodyStore = new Keyv('sqlite://custody.db');
+const {userStore, custodyStore} = store.initStore(config)
 const openWallets = new Map();
 let awaitingBlockCallbacks = [];
 let awaitingDaaScoreCallbacks = []

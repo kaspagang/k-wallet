@@ -18,8 +18,10 @@ module.exports = {
         try {
             wallet = await unlockWallet(interaction.user.id, secret);
             await interaction.reply({content:":unlock: *Wallet unlock successfully!*", ephemeral: true});
-        } catch {
+        } catch(e) {
+            console.log(`Error unlocking wallet: ${e}`);
             await interaction.reply({content:":warning: *Failed to unlock wallet. Try a different password*", ephemeral: true});
+            return;
         }
         if (wallet !==null && !regUser) {
             const button = new MessageActionRow()
