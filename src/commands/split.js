@@ -1,5 +1,6 @@
+const { explorer_tx } = require("../config");
 const { userStore, unlockWallet, getRPCBalance} = require("../lib/users");
-const {KATNIP_TX, KAS_TO_SOMPIS} = require("../constants");
+const {KAS_TO_SOMPIS} = require("../constants");
 
 DEFAULT_MAX_UTXOS = 500
 
@@ -77,7 +78,7 @@ module.exports = {
             calculateNetworkFee: true,
         }
         wallet.submitTransaction(txParamsArg).then(async (tx) => {
-            await interaction.editReply({content: `:dollar: Split successful ([here](${KATNIP_TX}${tx.txids[0]}))`})
+            await interaction.editReply({content: `:dollar: Split successful ([here](${explorer_tx}${tx.txids[0]}))`})
         }).catch(async (e) => {
             let message = e.message === undefined ? e : e.message;
             await interaction.editReply({content: `:warning: *Split failed.* \n> ${message}`})

@@ -1,5 +1,5 @@
+const {explorer_tx} = require("../config");
 const { userStore, unlockWallet } = require("../lib/users");
-const {KATNIP_TX} = require("../constants");
 
 DEFAULT_MAX_UTXOS = 500
 
@@ -35,7 +35,7 @@ module.exports = {
             compoundingUTXOMaxCount
         }
         wallet.submitTransaction(txParamsArg).then(async (tx) => {
-            await interaction.editReply({content: `:dollar: Compounding successful ([here](${KATNIP_TX}${tx.txids[0]}))`})
+            await interaction.editReply({content: `:dollar: Compounding successful ([here](${explorer_tx}${tx.txids[0]}))`})
         }).catch(async (e) => {
             let message = e.message === undefined ? e : e.message;
             await interaction.editReply({content: `:warning: *Compounding failed.* \n> ${message}`})

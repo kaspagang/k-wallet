@@ -1,7 +1,7 @@
 const config = require("../config");
 const { MessageEmbed } = require('discord.js');
 const { userStore, unlockWallet, getRPCBalance, getNodeStatus } = require("../lib/users");
-const { KAS_TO_SOMPIS, KATNIP_ADDR } = require("../constants");
+const { KAS_TO_SOMPIS } = require("../constants");
 
 module.exports = {
     name: "info",
@@ -44,15 +44,15 @@ module.exports = {
             { name: 'Wallet status', value: locked? ":unlock:" : ":lock:", inline: true },
             { name: 'Balance', value: balance, inline: true },
             { name: 'UTXO Count', value: utxoCount, inline: true },
-            { name: 'Tipper Public Address', value: `[${info.publicAddress}](${KATNIP_ADDR}${info.publicAddress})` },
+            { name: 'Tipper Public Address', value: `[${info.publicAddress}](${config.explorer_addr}${info.publicAddress})` },
         ]
         if (config.enableAutoForward) {
             const tipAddress = info.forward? info.forwardAddress : info.publicAddress;
-            fields.push({ name: 'Tip Destination', value: `[${tipAddress}](${KATNIP_ADDR}${tipAddress})` })
+            fields.push({ name: 'Tip Destination', value: `[${tipAddress}](${config.explorer_addr}${tipAddress})` })
         }
         if (info.forwardAddress) {
             fields.push(
-                { name: 'Withdraw Address', value: `[${info.forwardAddress}](${KATNIP_ADDR}${info.forwardAddress})`},
+                { name: 'Withdraw Address', value: `[${info.forwardAddress}](${config.explorer_addr}${info.forwardAddress})`},
             )
         } else {
             fields.push(

@@ -2,7 +2,7 @@ const config = require("../config");
 const { MessageMentions: { USERS_PATTERN, ROLES_PATTERN, EVERYONE_PATTERN } } = require('discord.js');
 const { unlockWallet, userStore, getCustodialAddress, addCustody, getRPCBalance, addBlockCallback, addDaaScoreCallback} = require("../lib/users");
 const {User, GuildMember, Role, Message} = require("discord.js");
-const { KAS_TO_SOMPIS, KATNIP_TX } = require("../constants");
+const { KAS_TO_SOMPIS } = require("../constants");
 
 const TRANSACTION_SPLIT_MAX = 20;
 const PENDING_SCORE_DIFF = 100;
@@ -11,7 +11,7 @@ const PENDING_SCORE_DIFF = 100;
 function statusToMessage({from, to, amount, txs, message}) {
     let txLinks = [...txs.entries()].map(([txid, {daaScore: txDaaScore, finalized}], i) => (
         (i === (txs.length - 1) && i > 0)? "and " : "") +
-        `[here](<${KATNIP_TX}${txid}>)` +
+        `[here](<${config.explorer_tx}${txid}>)` +
         (txDaaScore !== null? finalized? " :ballot_box_with_check:" : " :hourglass:" : "")
     ).reduce((a,b) => a + ", " + b)
     return `:moneybag: ${from} sent ${amount} <:kas:979006282734387210> to ${to} (${txLinks})` +

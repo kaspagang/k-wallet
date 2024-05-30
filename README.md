@@ -37,6 +37,8 @@ The file is of the following structure:
 ```json
 {
     "kaspad_address": <kaspad address>,
+    "explorer_tx": <explorer tx address>,
+    "explorer_addr": <explorer wallet link>,
     "network": <"kaspa" | "kaspatest" | "kaspadev" - determines the key derivation and default port>
     "custodial": <mnemonics for the custodial wallet>,
 
