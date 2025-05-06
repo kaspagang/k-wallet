@@ -9,4 +9,9 @@ defaults = {
     offline: "no"
 }
 
-module.exports = {...defaults, ...require(process.env.CONFIG_PATH)}
+config = {...defaults, ...require(process.env.CONFIG_PATH)};
+if (!Array.isArray(config.kaspad_address)) {
+    config.kaspad_address = [config.kaspad_address]
+}
+
+module.exports = config

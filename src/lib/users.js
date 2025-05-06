@@ -44,8 +44,17 @@ const checkUser = async (user) => {
     }
 }
 
+// Can throw error if failed to connect or server is not synced
 const walletInit = async (address, custodialMnemonic) => {
     rpc = new RPC({ clientConfig: { host: address.includes(":") ? address : address + ":" + port }})
+    await rpc.connect()
+    let info = await rpc.request("getInfoRequest", {})
+    if (!info.isSynced) {
+        await rpc.disconnect()
+        throw new Error(`RPC not Synced (server details: ${JSON.stringify(info)})`)
+    }
+    console.log(`Server version: ${JSON.stringify(info)}`)
+
     await initKaspaFramework();
 
     custodialWallet.wallet = Wallet.fromMnemonic(custodialMnemonic, {network, rpc}, {disableAddressDerivation: true, syncOnce: false});

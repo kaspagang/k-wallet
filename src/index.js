@@ -28,8 +28,18 @@ for (const file of commandFiles) {
   }
 }
 
-client.on("ready", (client) => {
-  walletInit(config.kaspad_address, config.custodial);
+client.on("ready", async (client) => {
+  console.log(`Kaspad Configured: ${JSON.stringify(config.kaspad_address)}`)
+  for (address of config.kaspad_address) {
+      console.log(`Attempting to connect to ${address}`)
+      try {
+          return await walletInit(address, config.custodial);
+      } catch (err) {
+          console.log(`Failed with error: ${err}`)
+      }
+  }
+  console.log(`Failed to connect to all servers. Exiting...`)
+  await client.destroy()
 });
 client.on('interactionCreate', async interaction => {
   if (!interaction.isCommand() && !interaction.isAutocomplete()) return;
